@@ -90,7 +90,7 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    if vis_flag:
+    while vis_flag:
         visualize_map(occupancy_map)
 
     first_time_idx = True
