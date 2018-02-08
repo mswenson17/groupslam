@@ -15,10 +15,10 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.01 # need to tune these
-        self.alpha_2 = 0.01
-        self.alpha_3 = 0.01
-        self.alpha_4 = 0.01
+        self.alpha_1 = 0 # 0.005 # rotation
+        self.alpha_2 = 0 # 0.005 # rotation
+        self.alpha_3 = 0 # 0.0001 # linear
+        self.alpha_4 = 0 # 0.0001 # linear
 
         self.mu = 0 # zero mean noise for sampling
 

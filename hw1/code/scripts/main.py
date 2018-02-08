@@ -26,7 +26,7 @@ def visualize_timestep(X_bar, tstep):
     y_locs = X_bar[:, 1] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
     plt.pause(0.00001)
-    scat.remove()
+    scat.remove() # comment this out for a quick'n'dirty trjactory visualizer
 
 
 def init_particles_random(num_particles, occupancy_map):
@@ -82,7 +82,7 @@ def main():
     sensor_model = SensorModel(occupancy_map)
     resampler = Resampling()
 
-    num_particles = 1 #500
+    num_particles = 1 # 500 # DEBUGGING
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -127,18 +127,18 @@ def main():
             """
             x_t0 = X_bar[m, 0:3]
             x_t1 = motion_model.update(u_t0, u_t1, x_t0)
-            # X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3])) # DEBUGGING
+            X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3])) # DEBUGGING
 
             """
             SENSOR MODEL
             """
-            if (meas_type == "L"):
-                z_t = ranges
-                w_t = sensor_model.beam_range_finder_model(z_t, x_t1)
-                # w_t = 1/num_particles
-                X_bar_new[m, :] = np.hstack((x_t1, w_t))
-            else:
-                X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
+            # if (meas_type == "L"):
+            #     z_t = ranges
+            #     w_t = sensor_model.beam_range_finder_model(z_t, x_t1)
+            #     # w_t = 1/num_particles
+            #     X_bar_new[m, :] = np.hstack((x_t1, w_t))
+            # else:
+            #     X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
 
         X_bar = X_bar_new
         u_t0 = u_t1
@@ -146,7 +146,7 @@ def main():
         # """
         # RESAMPLING
         # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)
