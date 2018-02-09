@@ -82,7 +82,7 @@ def main():
     sensor_model = SensorModel(occupancy_map)
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 30 # 500
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -127,6 +127,7 @@ def main():
             """
             x_t0 = X_bar[m, 0:3]
             x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+            X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3])) # debugging
 
             """
             SENSOR MODEL

@@ -13,6 +13,8 @@ class Resampling:
         TODO : Initialize resampling process parameters here
         """
 
+        self.M = 30 # number of paticles to sample
+
     def multinomial_sampler(self, X_bar):
 
         """
@@ -36,7 +38,23 @@ class Resampling:
         """
         TODO : Add your code here
         """
-        
+        # pdb.set_trace()
+
+        wt = X_bar[:,3]
+
+        X_bar_resampled = np.empty([self.M, 4])
+        r = np.random.uniform(0, 1/self.M) # 0 to M^-1
+        c = wt[0]
+        i = 1
+        for m in range(0, self.M):
+            u = r + (m - 1) * self.M**-1
+            while u > c:
+                i = i + 1
+                c = c + wt[i]
+            X_bar_resampled[m,:] = X_bar[i]
+
+        # pdb.set_trace()
+
         return X_bar_resampled
 
 if __name__ == "__main__":
