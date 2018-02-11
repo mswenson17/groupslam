@@ -15,13 +15,13 @@ class SensorModel:
     [Chapter 6.3]
     """
 
-    def __init__(self, occupancy_map):
+    def __init__(self, map_reader):
         """
         TODO : Initialize Sensor Model parameters here
         """
         self.norm_std = .1
         self.max_range = 3000
-        self.map = occupancy_map
+        self.map = map_reader
 
         # relative weights of each distribution in final pseudodistribution
         self.scale = (1, 1, 1, 1)
@@ -34,21 +34,23 @@ class SensorModel:
         """
         z_real = list()
         for i in range(0, 181):
-            z_real.append(self.map.raytrace(x_t1, i * np.pi / 360))
+            real_loc = self.map.raytrace(x_t1, i * np.pi / 360)
+            dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
+            z_real.append(dist)
 
         q = 0
         for z_r, z_t in zip(z_real, z_t1_arr):
             # define array of probability distributions to combine and sample from
-            prob = (1, 1, 1, 1)
-
+            # prob = (1, 1, 1, 1)
+            prob = list()
             a, b = (0 - z_r) / self.norm_std, (self.max_range - z_r) / self.norm_std
-            prob[0] = stats.truncnorm(a, b)
-            prob[1] = stats.truncexp(z_r)
-            prob[2] = stats.uniform(loc=self.max_range, scale=100000)
-            prob[3] = stats.uniform(loc=0, scale=self.max_range)
+            prob.append(stats.truncnorm(a, b))
+            prob.append(stats.truncexpon(z_r))
+            prob.append(stats.uniform(loc=self.max_range, scale=100000))
+            prob.append(stats.uniform(loc=0, scale=self.max_range))
 
             for dist, s in zip(prob, self.scale):
-                q += s * prob.pdf(z_t)
+                q += s * dist.pdf(z_t)
 
         return q
 

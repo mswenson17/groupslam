@@ -79,7 +79,7 @@ def main():
     logfile = open(src_path_log, 'r')
 
     motion_model = MotionModel()
-    sensor_model = SensorModel(occupancy_map)
+    sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
     num_particles = 500
@@ -90,7 +90,7 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    while vis_flag:
+    if vis_flag:
         visualize_map(occupancy_map)
 
     first_time_idx = True
@@ -145,7 +145,7 @@ def main():
         """
         RESAMPLING
         """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)

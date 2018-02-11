@@ -54,7 +54,10 @@ class MapReader:
         # plt.switch_backend('TkAgg')
         wall = self._occupancy_map[y_vals.astype(int), x_vals.astype(int)]
         edge = np.where(wall > .9)[0]
-        point = (x_vals[edge[0]], y_vals[edge[0]])
+        if len(edge) > 0:
+            point = (x_vals[edge[0]], y_vals[edge[0]])
+        else:
+            point = (0., 0.)
         # print("raytrace: " + str(point))
 
         # print("points")
