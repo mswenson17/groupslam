@@ -35,9 +35,6 @@ class Resampling:
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
 
-        """
-        TODO : Add your code here
-        """
         # pdb.set_trace()
 
         wt = X_bar[:,3]
@@ -53,7 +50,7 @@ class Resampling:
                 c = c + wt[i]
             X_bar_resampled[m,:] = X_bar[i]
 
-        # pdb.set_trace()
+        pdb.set_trace()
 
         return X_bar_resampled
 

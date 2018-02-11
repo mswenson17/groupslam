@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 import pdb
+import math
 
 from MapReader import MapReader
 from MotionModel import MotionModel
@@ -12,8 +13,7 @@ from matplotlib import figure as fig
 import time
 
 
-def visualize_map(occupancy_map):
-    fig = plt.figure()
+def visualize_map(occupancy_map, fig):
     # plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
     plt.ion()
@@ -28,7 +28,23 @@ def visualize_timestep(X_bar, tstep):
     plt.pause(0.00001)
     scat.remove() # comment this out for a quick'n'dirty trjactory visualizer
 
+def visualize_lasers(X_bar_new, z_t, time_idx, fig):
+    ax = fig.add_subplot(111)
+    del ax.lines[:] # refresh
 
+    x_locs = X_bar_new[:, 0] / 10.0
+    y_locs = X_bar_new[:, 1] / 10.0
+    theta  = X_bar_new[:, 2]
+
+    print theta
+
+    lines = []
+    for i in range(0,len(z_t),10): # show every 10th measurement
+        beamAngle = i*math.pi/180+(theta-math.pi/2) # radians
+        x_laser = math.cos(beamAngle) * (z_t[i] / 10.0) + x_locs
+        y_laser = math.sin(beamAngle) * (z_t[i] / 10.0) + y_locs
+        lines.append( ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b') )
+    
 def init_particles_random(num_particles, occupancy_map):
 
     # initialize [x, y, theta] positions in world_frame for all particles
@@ -53,7 +69,6 @@ def init_particles_freespace(num_particles, occupancy_map):
     """
     TODO : Add your code here
     """
-
     return X_bar_init
 
 
@@ -79,19 +94,21 @@ def main():
     logfile = open(src_path_log, 'r')
 
     motion_model = MotionModel()
-    sensor_model = SensorModel(occupancy_map)
+    sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 30 # 500
+    num_particles = 1 # 500
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
+    if vis_flag:
+        fig = plt.figure()
 
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
     if vis_flag:
-        visualize_map(occupancy_map)
+        visualize_map(occupancy_map, fig)
 
     first_time_idx = True
     for time_idx, line in enumerate(logfile):
@@ -127,26 +144,32 @@ def main():
             """
             x_t0 = X_bar[m, 0:3]
             x_t1 = motion_model.update(u_t0, u_t1, x_t0)
-            X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3])) # debugging
 
             """
             SENSOR MODEL
             """
             if (meas_type == "L"):
+
                 z_t = ranges
                 w_t = sensor_model.beam_range_finder_model(z_t, x_t1)
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))
+
+                if vis_flag:
+                    visualize_lasers(X_bar_new, z_t, time_idx, fig)
+
             else:
                 X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
+
+
 
         X_bar = X_bar_new
         u_t0 = u_t1
 
         # """
         # RESAMPLING
-        # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # # """
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)
