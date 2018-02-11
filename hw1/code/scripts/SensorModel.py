@@ -21,6 +21,7 @@ class SensorModel:
         """
         self.norm_std = .1
         self.max_range = 3000
+        self.map = occupancy_map
 
         # relative weights of each distribution in final pseudodistribution
         self.scale = (1, 1, 1, 1)
@@ -31,19 +32,23 @@ class SensorModel:
         param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
         param[out] prob_zt1 : likelihood of a range scan zt1 at time t
         """
+        z_real = list()
+        for i in range(0, 181):
+            z_real.append(self.map.raytrace(x_t1, i * np.pi / 360))
 
-        """
-        TODO : Add your code here
-        """
-        for z_t in z_t1_arr:
+        q = 0
+        for z_r, z_t in zip(z_real, z_t1_arr):
             # define array of probability distributions to combine and sample from
             prob = (1, 1, 1, 1)
 
-            a, b = (0 - z_t) / self.norm_std, (self.max_range - z_t) / self.norm_std
+            a, b = (0 - z_r) / self.norm_std, (self.max_range - z_r) / self.norm_std
             prob[0] = stats.truncnorm(a, b)
-            prob[1] = stats.truncexp(z_t)
+            prob[1] = stats.truncexp(z_r)
+            prob[2] = stats.uniform(loc=self.max_range, scale=100000)
+            prob[3] = stats.uniform(loc=0, scale=self.max_range)
 
-
+            for dist, s in zip(prob, self.scale):
+                q += s * prob.pdf(z_t)
 
         return q
 
