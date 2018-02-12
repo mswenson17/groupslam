@@ -1,4 +1,3 @@
-
 import numpy as np
 import sys
 import pdb
@@ -12,143 +11,148 @@ from Resampling import Resampling
 from matplotlib import pyplot as plt
 from matplotlib import figure as fig
 import time
-from multiprocessing import Process, Queue, Pool
+from functools import partial
+from multiprocessing import Pool
 
 
-class ParticleFilter:
-    def __init__(self):
+def visualize_map(occupancy_map):
+    # plt.switch_backend('TkAgg')
+    mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
+    plt.ion()
+    # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
+    plt.imshow(np.transpose(occupancy_map), cmap='Greys')
+    plt.axis([0, 800, 0, 800])
+
+
+def visualize_timestep(X_bar, tstep):
+    x_locs = X_bar[:, 0] / 10.0
+    y_locs = X_bar[:, 1] / 10.0
+    scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
+    plt.pause(0.00001)
+    scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
+
+
+def visualize_lasers(pos, z_t, time_idx, fig):
+    ax = fig.add_subplot(111)
+    del ax.lines[:]  # refresh
+
+    x_locs = pos[0] / 10.0
+    y_locs = pos[1] / 10.0
+    theta = pos[2]
+
+    lines = []
+    for i in range(0, len(z_t), 10):  # show every 10th measurement
+        beamAngle = i * math.pi / 180 + (theta - math.pi / 2)  # radians
+        x_laser = math.cos(beamAngle) * (z_t[i] / 10.0) + x_locs
+        y_laser = math.sin(beamAngle) * (z_t[i] / 10.0) + y_locs
+        lines.append(ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b'))
+
+
+def init_particles_random(num_particles):
+
+    # initialize [x, y, theta] positions in world_frame for all particles
+    # (randomly across the map)
+    y0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
+    x0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
+    theta0_vals = np.random.uniform(-3.14, 3.14, (num_particles, 1))
+
+    # initialize weights for all particles
+    w0_vals = np.ones((num_particles, 1), dtype=np.float64)
+    w0_vals = w0_vals / num_particles
+
+    X_bar_init = np.hstack((x0_vals, y0_vals, theta0_vals, w0_vals))
+
+    # pdb.set_trace()
+
+    return X_bar_init
+
+
+def init_particles_freespace(num_particles, occupancy_map):
+
+    # initialize [x, y, theta] positions in world_frame for all particles
+    # (in free space areas of the map)
+
+    freeSpaceThreshold = 0.1
+    X_bar_init = np.empty([0, 4])
+
+    while len(X_bar_init) < num_particles:
+
+        y = np.random.uniform(3000, 7000)
+        x = np.random.uniform(0, 8000)
+        theta = np.random.uniform()
+
+        result = occupancy_map[int(y / 10), int(x / 10)]
+        if abs(result) <= freeSpaceThreshold:  # we're good!
+            X_bar_init = np.vstack((X_bar_init, [y, x, theta, 1 / float(num_particles)]))
+
+    return X_bar_init
+
+
+def get_laser_odom(robot_odom):
+    return ((robot_odom[0] + 25 * math.cos(robot_odom[2])) / 10.,
+            (robot_odom[1] + 25 * math.sin(robot_odom[2])) / 10.,
+            robot_odom[2])
+
+
+def particle_update(motion_model, sensor_model, particle, meas_type, u_t0, u_t1, ranges, time_idx):
+
+    x_t1 = np.zeros((1, 3), dtype=np.float64)
+
+    x_t0 = particle[0:3]
+    """
+    MOTION MODEL
+    """
+    if ~(u_t0[0:3] == u_t1[0:3]).all():
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+    else:
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = x_t0
+
+    """
+        SENSOR MODEL
         """
-        Initialize Parameters
-        """
-        src_path_map = '../data/map/wean.dat'
-        src_path_log = '../data/log/robotdata1.log'
+    if (meas_type == "L"):
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+        odometry_laser = get_laser_odom(x_t1)
 
-        self.map_obj = MapReader(src_path_map)
-        self.occupancy_map = self.map_obj.get_map()
-        self.logfile = open(src_path_log, 'r')
+        z_t = ranges
+        # print("odom laser: " + str(odometry_laser))
+        w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
+        # w_t = 1/num_particles
+        particle_update = np.hstack((x_t1, w_t))
 
-        self.motion_model = MotionModel()
-        self.sensor_model = SensorModel(self.map_obj)
-        self.resampler = Resampling()
+        # if vis_flag and num_particles == 1:
+        # visualize_lasers(x_t1, z_t, time_idx, fig)
 
-        self.num_particles = 50
-        self.vis_flag = 1
+    else:
+        particle_update = np.hstack((x_t1, particle[3]))
 
-        if self.vis_flag:
-            self.visualize_map()
-
-    def visualize_map(self):
-        # plt.switch_backend('TkAgg')
-        mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
-        plt.ion()
-        # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
-        plt.imshow(np.transpose(self.occupancy_map), cmap='Greys')
-        plt.axis([0, 800, 0, 800])
-
-    def visualize_timestep(self, X_bar, tstep):
-        x_locs = X_bar[:, 0] / 10.0
-        y_locs = X_bar[:, 1] / 10.0
-        scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
-        plt.pause(0.00001)
-        scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
-
-    def visualize_lasers(self, pos, z_t, time_idx, fig):
-        ax = fig.add_subplot(111)
-        del ax.lines[:]  # refresh
-
-        x_locs = pos[0] / 10.0
-        y_locs = pos[1] / 10.0
-        theta = pos[2]
-
-        lines = []
-        for i in range(0, len(z_t), 10):  # show every 10th measurement
-            beamAngle = i * math.pi / 180 + (theta - math.pi / 2)  # radians
-            x_laser = math.cos(beamAngle) * (z_t[i] / 10.0) + x_locs
-            y_laser = math.sin(beamAngle) * (z_t[i] / 10.0) + y_locs
-            lines.append(ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b'))
-
-    def init_particles_random(self):
-
-        # initialize [x, y, theta] positions in world_frame for all particles
-        # (randomly across the map)
-        y0_vals = np.random.uniform(3800, 4200, (self.num_particles, 1))
-        x0_vals = np.random.uniform(3800, 4200, (self.num_particles, 1))
-        theta0_vals = np.random.uniform(-3.14, 3.14, (self.num_particles, 1))
-
-        # initialize weights for all particles
-        w0_vals = np.ones((self.num_particles, 1), dtype=np.float64)
-        w0_vals = w0_vals / self.num_particles
-
-        X_bar_init = np.hstack((x0_vals, y0_vals, theta0_vals, w0_vals))
-
-        # pdb.set_trace()
-
-        return X_bar_init
-
-    def init_particles_freespace(self):
-
-        # initialize [x, y, theta] positions in world_frame for all particles
-        # (in free space areas of the map)
-
-        freeSpaceThreshold = 0.1
-        X_bar_init = np.empty([0, 4])
-
-        while len(X_bar_init) < self.num_particles:
-
-            x = np.random.uniform(3000, 7000)
-            y = np.random.uniform(0, 8000)
-            theta = np.random.uniform()
-
-            result = self.occupancy_map[int(y / 10), int(x / 10)]
-            if abs(result) <= freeSpaceThreshold:  # we're good!
-                X_bar_init = np.vstack((X_bar_init, [x, y, theta, 1 / float(self.num_particles)]))
-
-        return X_bar_init
-
-    def get_laser_odom(self, robot_odom):
-        return ((robot_odom[0] + 25 * math.cos(robot_odom[2])) / 10.,
-                (robot_odom[1] + 25 * math.sin(robot_odom[2])) / 10.,
-                robot_odom[2])
-
-    def particle_update(self, particle, meas_type, u_t0, u_t1, ranges, time_idx):
-
-        x_t1 = np.zeros((1, 3), dtype=np.float64)
-
-        x_t0 = particle[0:3]
-        """
-        MOTION MODEL
-        """
-        if ~(u_t0[0:3] == u_t1[0:3]).all():
-            # x_t0 = self.X_bar[m, 0:3]
-            x_t1 = self.motion_model.update(u_t0, u_t1, x_t0)
-        else:
-            # x_t0 = self.X_bar[m, 0:3]
-            x_t1 = x_t0
-
-        """
-            SENSOR MODEL
-            """
-        if (meas_type == "L"):
-            # x_t0 = self.X_bar[m, 0:3]
-            x_t1 = self.motion_model.update(u_t0, u_t1, x_t0)
-            odometry_laser = self.get_laser_odom(x_t1)
-
-            z_t = ranges
-            # print("odom laser: " + str(odometry_laser))
-            w_t = self.sensor_model.beam_range_finder_model(z_t, odometry_laser)
-            # w_t = 1/num_particles
-            particle_update = np.hstack((x_t1, w_t))
-
-            if self.vis_flag and self.num_particles == 1:
-                self.visualize_lasers(x_t1, z_t, time_idx, fig)
-
-        else:
-            particle_update = np.hstack((x_t1, particle[3]))
-
-        return particle_update
+    return particle_update
 
 
 def main():
+    """
+    Initialize Parameters
+    """
+    src_path_map = '../data/map/wean.dat'
+    src_path_log = '../data/log/robotdata1.log'
+
+    map_obj = MapReader(src_path_map)
+    occupancy_map = map_obj.get_map()
+    logfile = open(src_path_log, 'r')
+
+    motion_model = MotionModel()
+    sensor_model = SensorModel(map_obj)
+    resampler = Resampling()
+
+    num_particles = 50
+    vis_flag = 1
+
+    if vis_flag:
+        visualize_map(occupancy_map)
+
     """
     Description of variables used
     u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]
@@ -158,18 +162,19 @@ def main():
     X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
     z_t : array of 180 range measurements for each laser scan
     """
-    pf = ParticleFilter()
-
-    pool = Pool(processes=4)
+    # pf = ParticleFilter()
 
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    X_bar = pf.init_particles_random()
-
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
 
     first_time_idx = True
-    for time_idx, line in enumerate(pf.logfile):
+    i = 0
+    for time_idx, line in enumerate(logfile):
+        i += 1
+        if i > 10:
+            return
 
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
         meas_type = line[0]  # L : laser scan measurement, O : odometry measurement
@@ -191,54 +196,35 @@ def main():
             u_t0 = u_t1
             first_time_idx = False
             continue
-        X_bar_new = np.empty((0, 4), int)
+        X_bar_new = np.empty((0, 4), dtype=np.float64)
 
         # for p in range(0, pf.num_particles):
+        pool = Pool(processes=4)
+        results = list()
         for p in X_bar:
+            job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
+            # apply(particle_update, job_args)
+            results.append(pool.apply_async(particle_update, job_args))
+            # results = pool.map(particle_update, job_args)
 
-            p_updated = pf.particle_update(p, meas_type, u_t0, u_t1, ranges, time_stamp)
+        pool.close()
+        pool.join()
+        for res in results:
+            p_updated = res.get(timeout=10)
             X_bar_new = np.vstack((X_bar_new, p_updated))
-
-            # """
-            # MOTION MODEL
-            # """
-            # if ~(u_t0[0:3] == u_t1[0:3]).all():
-            # x_t0 = X_bar[m, 0:3]
-            # x_t1 = pf.motion_model.update(u_t0, u_t1, x_t0)
-            # else:
-            # x_t0 = X_bar[m, 0:3]
-            # x_t1 = x_t0
-
-            # """
-            # SENSOR MODEL
-            # """
-            # if (meas_type == "L"):
-            # x_t0 = X_bar[m, 0:3]
-            # x_t1 = pf.motion_model.update(u_t0, u_t1, x_t0)
-            # odometry_laser = pf.get_laser_odom(x_t1)
-
-            # z_t = ranges
-            # # print("odom laser: " + str(odometry_laser))
-            # w_t = pf.sensor_model.beam_range_finder_model(z_t, odometry_laser)
-            # # w_t = 1/num_particles
-            # X_bar_new[m, :] = np.hstack((x_t1, w_t))
-
-            # if vis_flag and pf.num_particles == 1:
-            # pf.visualize_lasers(x_t1, z_t, time_idx, fig)
-
-            # else:
-            # X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
-
+            # print(p_updated)
+        # print(X_bar_new)
+        # print(np.array(X_bar_new))
         X_bar = X_bar_new
         u_t0 = u_t1
 
         # """
         # RESAMPLING
         # # """
-        X_bar = pf.resampler.low_variance_sampler(X_bar)
+        X_bar = resampler.low_variance_sampler(X_bar)
 
-        if pf.vis_flag:
-            pf.visualize_timestep(X_bar, time_idx)
+        if vis_flag:
+            visualize_timestep(X_bar, time_idx)
 
 
 if __name__ == "__main__":
