@@ -33,6 +33,8 @@ class MotionModel:
 
         # [Chapter 5, Page 122]
         
+        # pdb.set_trace()
+
         # find relative change in odometry since last measurement
         delta_rot1 = math.atan2( u_t1[1] - u_t0[1], u_t1[0] - u_t0[0] ) - u_t0[2]
         delta_trans = math.sqrt ( (u_t0[0] - u_t1[0])**2 + (u_t0[1] - u_t1[1])**2 ) 
@@ -43,7 +45,7 @@ class MotionModel:
         _delta_rot1 = delta_rot1 - np.random.normal(self.mu, sigma_delta_rot1)
 
         sigma_delta_trans = math.sqrt( self.alpha_3*abs(delta_trans) + self.alpha_4*abs(delta_rot1+delta_rot2) )
-        _delta_trans = delta_trans - np.random.normal(self.mu, sigma_delta_trans)
+        _delta_trans = delta_trans - np.random.normal(self.mu, sigma_delta_trans) if sigma_delta_trans != 0 else 0
 
         sigma_delta_rot2 = math.sqrt( self.alpha_1*abs(delta_rot2) + self.alpha_2*abs(delta_trans) )
         _delta_rot2 = delta_rot2 - np.random.normal(self.mu, sigma_delta_rot2)
