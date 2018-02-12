@@ -27,23 +27,25 @@ def visualize_timestep(X_bar, tstep):
     y_locs = X_bar[:, 1] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
     plt.pause(0.00001)
-    scat.remove() # comment this out for a quick'n'dirty trjactory visualizer
+    scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
+
 
 def visualize_lasers(pos, z_t, time_idx, fig):
     ax = fig.add_subplot(111)
-    del ax.lines[:] # refresh
+    del ax.lines[:]  # refresh
 
     x_locs = pos[0] / 10.0
     y_locs = pos[1] / 10.0
-    theta  = pos[2]
+    theta = pos[2]
 
     lines = []
-    for i in range(0,len(z_t),10): # show every 10th measurement
-        beamAngle = i*math.pi/180+(theta-math.pi/2) # radians
+    for i in range(0, len(z_t), 10):  # show every 10th measurement
+        beamAngle = i * math.pi / 180 + (theta - math.pi / 2)  # radians
         x_laser = math.cos(beamAngle) * (z_t[i] / 10.0) + x_locs
         y_laser = math.sin(beamAngle) * (z_t[i] / 10.0) + y_locs
-        lines.append( ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b') )
-    
+        lines.append(ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b'))
+
+
 def init_particles_random(num_particles, occupancy_map):
 
     # initialize [x, y, theta] positions in world_frame for all particles
@@ -58,7 +60,7 @@ def init_particles_random(num_particles, occupancy_map):
 
     X_bar_init = np.hstack((x0_vals, y0_vals, theta0_vals, w0_vals))
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
     return X_bar_init
 
@@ -70,17 +72,17 @@ def init_particles_freespace(num_particles, occupancy_map):
 
     freeSpaceThreshold = 0.1
 
-    X_bar_init = np.empty([0,4])
+    X_bar_init = np.empty([0, 4])
 
     while len(X_bar_init) < num_particles:
 
         x = np.random.uniform(3000, 7000)
-        y = np.random.uniform(0,8000)
+        y = np.random.uniform(0, 8000)
         theta = np.random.uniform()
 
-        result = occupancy_map[int(y/10), int(x/10)]
-        if abs(result) <= freeSpaceThreshold: # we're good!
-            X_bar_init = np.vstack( (X_bar_init, [x, y, theta, 1/float(num_particles)]) )
+        result = occupancy_map[int(y / 10), int(x / 10)]
+        if abs(result) <= freeSpaceThreshold:  # we're good!
+            X_bar_init = np.vstack((X_bar_init, [x, y, theta, 1 / float(num_particles)]))
 
     return X_bar_init
 
@@ -110,7 +112,7 @@ def main():
     sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 100
+    num_particles = 2
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -142,7 +144,6 @@ def main():
             odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
 
-
         if (first_time_idx):
             u_t0 = odometry_robot
             first_time_idx = False
@@ -158,7 +159,7 @@ def main():
             if ~(u_t0[0:3] == u_t1[0:3]).all():
                 x_t0 = X_bar[m, 0:3]
                 x_t1 = motion_model.update(u_t0, u_t1, x_t0)
-            else: 
+            else:
                 x_t0 = X_bar[m, 0:3]
                 x_t1 = x_t0
 
@@ -170,6 +171,7 @@ def main():
                 x_t1 = motion_model.update(u_t0, u_t1, x_t0)
 
                 z_t = ranges
+                print("odom laser: "+ str(odometry_laser))
                 w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))

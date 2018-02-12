@@ -17,7 +17,19 @@ class MapReader:
         self._size_x = self._occupancy_map.shape[0] * self._resolution
         self._size_y = self._occupancy_map.shape[1] * self._resolution
 
-        points = np.linspace(1, length, num=length, endpoint=False)
+        length = 700.
+        scale = 1
+        points = np.tile(np.arange(0., length, scale), [181, 1])
+        self._sines = np.empty(np.shape(points))
+        self._cosines = np.empty(np.shape(points))
+        for idx, point in np.ndenumerate(points):
+            self._sines[idx] = np.sin(idx[0] * np.pi / 180.) * point
+            self._cosines[idx] = np.cos(idx[0] * np.pi / 180.) * point
+            # print(str(idx) + ": " + str(point) + " val: "+ str(np.sin(idx[0] * np.pi / 180.) * point) + " sin: "+str(self._sines[idx]))
+
+        # print(self._sines[1,...])
+        # print(self._cosines[1,...])
+        # print(np.shape(self._sines))
 
         print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
 
@@ -41,12 +53,17 @@ class MapReader:
     def get_map_size_y(self):  # in cm
         return self._size_y
 
-    def raytrace(self, x_t1, theta):
-        length = np.floor(self.get_map_size_x() / self._resolution / 2)
-        length = 100
+    def raytrace(self, x_t1, angle):
 
-        x_vals = np.floor(points * np.cos(theta + x_t1[2]) + x_t1[0])
-        y_vals = np.floor(points * np.sin(theta + x_t1[2]) + x_t1[1])
+        # points = np.linspace(1, length, num=length, endpoint=False)
+        # x_vals = np.floor(points * np.cos(theta + x_t1[2]) + x_t1[0])
+        # y_vals = np.floor(points * np.sin(theta + x_t1[2]) + x_t1[1])
+        theta = x_t1[2]  # angle * np.pi / 180
+        sines = self._sines[angle, ...] * np.cos(theta) + self._cosines[angle, ...] * np.sin(theta)
+        cosines = self._cosines[angle, ...] * np.cos(theta) + self._sines[angle, ...] * np.sin(theta)
+
+        x_vals = np.round(cosines + x_t1[0])
+        y_vals = np.round(sines + x_t1[1])
 
         x_vals[x_vals < 0] = 0
         y_vals[y_vals < 0] = 0
@@ -60,7 +77,11 @@ class MapReader:
             point = (x_vals[edge[0]], y_vals[edge[0]])
         else:
             point = (0., 0.)
-        # print("raytrace: " + str(point))
+
+        print(x_t1)
+        print(cosines)
+        print(x_vals)
+        print("raytrace: " + str(point))
 
         # print("points")
         # print(wall.shape)
@@ -72,15 +93,16 @@ class MapReader:
         # plt.ion()
         # plt.imshow(self._occupancy_map, cmap='Greys')
         # plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
+        plt.plot(x_vals, y_vals)
+
+        # test = np.where(self._occupancy_map != -1.000)
+        # plt.plot(test[0], test[1], '.g')
         # plt.plot(x_vals, y_vals, 'o')
 
-        # # test = np.where(self._occupancy_map != -1.000)
-        # # plt.plot(test[0], test[1], '.g')
-        # # plt.plot(x_vals, y_vals, 'o')
-
-        # plt.draw()
-        # plt.pause(9)
+        plt.draw()
+        # plt.pause(.1)
         return point
+
 
 if __name__ == "__main__":
 
