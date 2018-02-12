@@ -46,7 +46,7 @@ class SensorModel:
             a, b = (0 - z_r) / self.norm_std, (self.max_range - z_r) / self.norm_std
             prob.append(stats.truncnorm(a, b))
             prob.append(stats.truncexpon(z_r))
-            prob.append(stats.uniform(loc=self.max_range, scale=100000))
+            prob.append(stats.uniform(loc=self.max_range - 50, scale=100000))
             prob.append(stats.uniform(loc=0, scale=self.max_range))
 
             for dist, s in zip(prob, self.scale):
