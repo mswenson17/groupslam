@@ -132,9 +132,13 @@ def main():
     if vis_flag:
         visualize_map(occupancy_map, fig)
 
+    i = 0
     first_time_idx = True
     for time_idx, line in enumerate(logfile):
 
+        i += 1
+        if i > 10:
+            return
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
         meas_type = line[0]  # L : laser scan measurement, O : odometry measurement
         # convert measurement values from string to double

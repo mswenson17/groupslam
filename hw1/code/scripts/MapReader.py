@@ -81,7 +81,7 @@ class MapReader:
         # print(x_t1)
         # print(cosines)
         # print(x_vals)
-        print("raytrace: " + str(point))
+        # print("raytrace: " + str(point))
 
         # print("points")
         # print(wall.shape)
@@ -90,16 +90,16 @@ class MapReader:
         # print("wall point")
         # mng = plt.get_current_fig_manager()
         # mng.resize(*mng.window.maxsize())
-        plt.ion()
-        plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
-        plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
-        plt.plot(x_vals, y_vals)
+        # plt.ion()
+        # plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
+        # plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
+        # plt.plot(x_vals, y_vals)
 
-        # test = np.where(self._occupancy_map != -1.000)
-        # plt.plot(test[0], test[1], '.g')
-        plt.plot(x_vals, y_vals, 'o')
-        plt.draw()
-        plt.pause(10)
+        # # test = np.where(self._occupancy_map != -1.000)
+        # # plt.plot(test[0], test[1], '.g')
+        # plt.plot(x_vals, y_vals, 'o')
+        # plt.draw()
+        # plt.pause(10)
         return point
 
 
