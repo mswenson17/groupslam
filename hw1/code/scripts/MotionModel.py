@@ -34,6 +34,7 @@ class MotionModel:
         print(u_t0)
         print(u_t1)
         print(x_t0)
+        # pdb.set_trace()
 
         # find relative change in odometry since last measurement
         delta_rot1 = math.atan2(u_t1[1] - u_t0[1], u_t1[0] - u_t0[0]) - u_t0[2]
