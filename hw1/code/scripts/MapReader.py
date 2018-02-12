@@ -17,7 +17,9 @@ class MapReader:
         self._size_x = self._occupancy_map.shape[0] * self._resolution
         self._size_y = self._occupancy_map.shape[1] * self._resolution
 
-        print 'Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')'
+        points = np.linspace(1, length, num=length, endpoint=False)
+
+        print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
 
     def visualize_map(self):
         # fig = plt.figure()
@@ -41,8 +43,8 @@ class MapReader:
 
     def raytrace(self, x_t1, theta):
         length = np.floor(self.get_map_size_x() / self._resolution / 2)
+        length = 100
 
-        points = np.linspace(1, length, num=length, endpoint=False)
         x_vals = np.floor(points * np.cos(theta + x_t1[2]) + x_t1[0])
         y_vals = np.floor(points * np.sin(theta + x_t1[2]) + x_t1[1])
 

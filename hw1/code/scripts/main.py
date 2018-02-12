@@ -95,7 +95,7 @@ def main():
     sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 100
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -122,11 +122,11 @@ def main():
         # if ((time_stamp <= 0.0) | (meas_type == "O")): # ignore pure odometry measurements for now (faster debugging)
         # continue
 
+        print("Processing time step " + str(time_idx) + " at time " + str(time_stamp) + "s measurement: " + meas_type)
         if (meas_type == "L"):
             odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
 
-        print("Processing time step " + str(time_idx) + " at time " + str(time_stamp) + "s")
 
         if (first_time_idx):
             u_t0 = odometry_robot
@@ -140,16 +140,22 @@ def main():
             """
             MOTION MODEL
             """
-            x_t0 = X_bar[m, 0:3]
-            x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+            if ~(u_t0[0:3] == u_t1[0:3]).all():
+                x_t0 = X_bar[m, 0:3]
+                x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+            else: 
+                x_t0 = X_bar[m, 0:3]
+                x_t1 = x_t0
 
             """
             SENSOR MODEL
             """
             if (meas_type == "L"):
+                x_t0 = X_bar[m, 0:3]
+                x_t1 = motion_model.update(u_t0, u_t1, x_t0)
 
                 z_t = ranges
-                w_t = sensor_model.beam_range_finder_model(z_t, x_t1)
+                w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))
 
