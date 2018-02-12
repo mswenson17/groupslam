@@ -94,8 +94,8 @@ def get_laser_odom(robot_odom):
             robot_odom[2])
 
 
-def particle_update(motion_model, sensor_model, particle, meas_type, u_t0, u_t1, ranges, time_idx):
-
+def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
+    global motion_model, sensor_model
     x_t1 = np.zeros((1, 3), dtype=np.float64)
 
     x_t0 = particle[0:3]
@@ -109,9 +109,7 @@ def particle_update(motion_model, sensor_model, particle, meas_type, u_t0, u_t1,
         # x_t0 = X_bar[m, 0:3]
         x_t1 = x_t0
 
-    """
-        SENSOR MODEL
-        """
+    """ SENSOR MODEL """
     if (meas_type == "L"):
         # x_t0 = X_bar[m, 0:3]
         x_t1 = motion_model.update(u_t0, u_t1, x_t0)
@@ -132,19 +130,32 @@ def particle_update(motion_model, sensor_model, particle, meas_type, u_t0, u_t1,
     return particle_update
 
 
+def pool_init():
+    global map_obj, occupancy_map, motion_model, sensor_model
+    """
+    Initialize Parameters
+    """
+    src_path_map = '../data/map/wean.dat'
+
+    map_obj = MapReader(src_path_map)
+    occupancy_map = map_obj.get_map()
+
+    motion_model = MotionModel()
+    sensor_model = SensorModel(map_obj)
+
+
 def main():
     """
     Initialize Parameters
     """
     src_path_map = '../data/map/wean.dat'
-    src_path_log = '../data/log/robotdata1.log'
 
     map_obj = MapReader(src_path_map)
     occupancy_map = map_obj.get_map()
+
+    src_path_log = '../data/log/robotdata1.log'
     logfile = open(src_path_log, 'r')
 
-    motion_model = MotionModel()
-    sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
     num_particles = 50
@@ -168,6 +179,8 @@ def main():
     Monte Carlo Localization Algorithm : Main Loop
     """
     X_bar = init_particles_freespace(num_particles, occupancy_map)
+
+    pool = Pool(8, pool_init)
 
     first_time_idx = True
     i = 0
@@ -198,19 +211,28 @@ def main():
             continue
         X_bar_new = np.empty((0, 4), dtype=np.float64)
 
-        # for p in range(0, pf.num_particles):
-        pool = Pool(processes=4)
-        results = list()
-        for p in X_bar:
-            job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
-            # apply(particle_update, job_args)
-            results.append(pool.apply_async(particle_update, job_args))
+        p_up = partial(particle_update, meas_type, u_t0, u_t1, ranges, time_stamp)
+        results = pool.map(p_up, X_bar)
+        X_bar_new = np.squeeze(results)
 
-        pool.close()
-        pool.join()
-        for res in results:
-            p_updated = res.get(timeout=10)
-            X_bar_new = np.vstack((X_bar_new, p_updated))
+        # for p in range(0, pf.num_particles):
+        # results = list()
+        # for p in X_bar:
+            # job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
+            # # apply(particle_update, job_args)
+            # results.append(pool.apply_async(particle_update, job_args))
+
+        # pool.close()
+        # pool.join()
+        # print("results")
+        # print(results)
+        # print("X_bar")
+        # print(X_bar)
+        # print(np.shape(results))
+        # print(np.shape(X_bar))
+        # for res in results:
+            # p_updated = res.get(timeout=10)
+            # X_bar_new = np.vstack((X_bar_new, p_updated))
             # print(p_updated)
         # print(X_bar_new)
         # print(np.array(X_bar_new))
