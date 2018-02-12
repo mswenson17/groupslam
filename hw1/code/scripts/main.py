@@ -158,7 +158,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 50
+    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
