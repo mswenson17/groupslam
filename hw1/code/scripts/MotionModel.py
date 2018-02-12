@@ -17,8 +17,8 @@ class MotionModel:
         """
         self.alpha_1 = 0.05  # rotation
         self.alpha_2 = 0.05  # rotation
-        self.alpha_3 = 10.  # linear
-        self.alpha_4 = 10.  # linear
+        self.alpha_3 = 5.  # linear
+        self.alpha_4 = 5.  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 
@@ -34,7 +34,7 @@ class MotionModel:
         # pdb.set_trace()
 
         # find relative change in odometry since last measurement
-        delta_rot1 = math.atan2(u_t1[1] - u_t0[1], u_t1[0] - u_t0[0]) - u_t0[2]
+        delta_rot1 = math.atan2((u_t1[1] - u_t0[1]) % math.pi, (u_t1[0] - u_t0[0]) % math.pi) - u_t0[2]
         delta_trans = math.sqrt((u_t0[0] - u_t1[0])**2 + (u_t0[1] - u_t1[1])**2)
         delta_rot2 = u_t1[2] - u_t0[2] - delta_rot1
 

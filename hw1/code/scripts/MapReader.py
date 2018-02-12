@@ -1,5 +1,4 @@
-import numpy as np
-
+import numpy as np 
 from matplotlib import pyplot as plt
 # from matplotlib import figure as fig
 
@@ -12,13 +11,14 @@ class MapReader:
         self._occupancy_map[self._occupancy_map < 0] = -1
         self._occupancy_map[self._occupancy_map > 0] = 1 - self._occupancy_map[self._occupancy_map > 0]
         self._occupancy_map = np.flipud(self._occupancy_map)
+        # self._occupancy_map = np.transpose(self._occupancy_map)
 
         self._resolution = 10  # each cell has a 10cm resolution in x,y axes
         self._size_x = self._occupancy_map.shape[0] * self._resolution
         self._size_y = self._occupancy_map.shape[1] * self._resolution
 
         length = 700.
-        scale = 1
+        scale = 2
         points = np.tile(np.arange(0., length, scale), [181, 1])
         self._sines = np.empty(np.shape(points))
         self._cosines = np.empty(np.shape(points))
@@ -39,7 +39,7 @@ class MapReader:
         mng = plt.get_current_fig_manager()
         mng.resize(*mng.window.maxsize())
         plt.ion()
-        plt.imshow(self._occupancy_map, cmap='Greys')
+        plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
         plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
         plt.draw()
         plt.pause(10)
@@ -90,17 +90,16 @@ class MapReader:
         # print("wall point")
         # mng = plt.get_current_fig_manager()
         # mng.resize(*mng.window.maxsize())
-        plt.ion()
-        plt.imshow(self._occupancy_map, cmap='Greys')
-        plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
-        plt.plot(x_vals, y_vals)
+        # plt.ion()
+        # plt.imshow(self._occupancy_map, cmap='Greys')
+        # plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
+        # plt.plot(x_vals, y_vals)
 
         # test = np.where(self._occupancy_map != -1.000)
         # plt.plot(test[0], test[1], '.g')
         # plt.plot(x_vals, y_vals, 'o')
-
-        plt.draw()
-        # plt.pause(.1)
+        # plt.draw()
+        # plt.pause(10)
         return point
 
 
@@ -108,5 +107,5 @@ if __name__ == "__main__":
 
     src_path_map = '../data/map/wean.dat'
     map1 = MapReader(src_path_map)
-    # map1.raytrace((400, 400, 0), 1.6)
-    map1.visualize_map()
+    map1.raytrace((400, 400, 0), 90)
+    # map1.visualize_map()

@@ -36,7 +36,6 @@ class SensorModel:
         param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
         param[out] prob_zt1 : likelihood of a range scan zt1 at time t
         """
-        print(x_t1)
         z_real = list()
         for i in range(0, 181, 20):  # take every 10th measurement
             real_loc = self.map.raytrace(x_t1, i)

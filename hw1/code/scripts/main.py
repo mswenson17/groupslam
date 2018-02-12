@@ -18,7 +18,8 @@ def visualize_map(occupancy_map, fig):
     # plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
     plt.ion()
-    plt.imshow(occupancy_map, cmap='Greys')
+    # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
+    plt.imshow(np.transpose(occupancy_map), cmap='Greys')
     plt.axis([0, 800, 0, 800])
 
 
@@ -50,8 +51,8 @@ def init_particles_random(num_particles, occupancy_map):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
-    y0_vals = np.random.uniform(0, 7000, (num_particles, 1))
-    x0_vals = np.random.uniform(3000, 7000, (num_particles, 1))
+    y0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
+    x0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
     theta0_vals = np.random.uniform(-3.14, 3.14, (num_particles, 1))
 
     # initialize weights for all particles
@@ -118,7 +119,7 @@ def main():
     sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 2
+    num_particles = 50
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -178,7 +179,7 @@ def main():
                 odometry_laser = get_laser_odom(x_t1)
 
                 z_t = ranges
-                print("odom laser: " + str(odometry_laser))
+                # print("odom laser: " + str(odometry_laser))
                 w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))
