@@ -95,7 +95,7 @@ def main():
     sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 30
+    num_particles = 500
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
