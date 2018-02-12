@@ -87,6 +87,12 @@ def init_particles_freespace(num_particles, occupancy_map):
     return X_bar_init
 
 
+def get_laser_odom(robot_odom):
+    return ((robot_odom[0] + 25 * math.cos(robot_odom[2])) / 10.,
+            (robot_odom[1] + 25 * math.sin(robot_odom[2])) / 10.,
+            robot_odom[2])
+
+
 def main():
     """
     Description of variables used
@@ -141,7 +147,7 @@ def main():
 
         print("Processing time step " + str(time_idx) + " at time " + str(time_stamp) + "s measurement: " + meas_type)
         if (meas_type == "L"):
-            odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
+            # odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
 
         if (first_time_idx):
@@ -169,9 +175,10 @@ def main():
             if (meas_type == "L"):
                 x_t0 = X_bar[m, 0:3]
                 x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+                odometry_laser = get_laser_odom(x_t1)
 
                 z_t = ranges
-                print("odom laser: "+ str(odometry_laser))
+                print("odom laser: " + str(odometry_laser))
                 w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))
