@@ -64,9 +64,20 @@ def init_particles_freespace(num_particles, occupancy_map):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (in free space areas of the map)
-    """
-    TODO : Add your code here
-    """
+
+    freeSpaceThreshold = 0.5
+
+    x = np.random.uniform()
+    y = np.random.uniform()
+    theta = np.random.uniform()
+
+    pdb.set_trace()
+
+    result = occupancy_map[x, y]
+
+    if abs(result) <= freeSpaceThreshold: # we're good!
+        
+    
     return X_bar_init
 
 
@@ -96,7 +107,7 @@ def main():
     resampler = Resampling()
 
     num_particles = 500
-    X_bar = init_particles_random(num_particles, occupancy_map)
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
 
     vis_flag = 1
     if vis_flag:
