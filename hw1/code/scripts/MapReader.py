@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from matplotlib import pyplot as plt
 # from matplotlib import figure as fig
 
@@ -53,7 +53,7 @@ class MapReader:
     def get_map_size_y(self):  # in cm
         return self._size_y
 
-    def raytrace(self, x_t1, angle):
+    def raytrace(self, x_t1, angle, debug=False):
 
         # points = np.linspace(1, length, num=length, endpoint=False)
         # x_vals = np.floor(points * np.cos(theta + x_t1[2]) + x_t1[0])
@@ -81,25 +81,26 @@ class MapReader:
         # print(x_t1)
         # print(cosines)
         # print(x_vals)
-        print("raytrace: " + str(point))
+        if debug:
+            print("raytrace: " + str(point))
 
-        # print("points")
-        # print(wall.shape)
-        # print(wall)
-        # print(edge[0])
-        # print("wall point")
-        # mng = plt.get_current_fig_manager()
-        # mng.resize(*mng.window.maxsize())
-        plt.ion()
-        plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
-        plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
-        plt.plot(x_vals, y_vals)
+            # print("points")
+            # print(wall.shape)
+            # print(wall)
+            # print(edge[0])
+            # print("wall point")
+            # mng = plt.get_current_fig_manager()
+            # mng.resize(*mng.window.maxsize())
+            plt.ion()
+            plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
+            plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
+            plt.plot(x_vals, y_vals)
 
-        # test = np.where(self._occupancy_map != -1.000)
-        # plt.plot(test[0], test[1], '.g')
-        plt.plot(x_vals, y_vals, 'o')
-        plt.draw()
-        plt.pause(10)
+            # test = np.where(self._occupancy_map != -1.000)
+            # plt.plot(test[0], test[1], '.g')
+            plt.plot(x_vals, y_vals, 'o')
+            plt.draw()
+            plt.pause(10)
         return point
 
 
