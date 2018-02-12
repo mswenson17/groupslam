@@ -20,11 +20,15 @@ class SensorModel:
         TODO : Initialize Sensor Model parameters here
         """
         self.norm_std = .1
-        self.max_range = 3000
+        self.max_range = 3000 # Zmax = 8333
         self.map = map_reader
 
+        probShort = 0.15
+        probMax = 0.01
+        probRand = 0.15
+        probHit = 1 - (probShort + probMax + probRand)
         # relative weights of each distribution in final pseudodistribution
-        self.scale = (1, 1, 1, 1)
+        self.scale = (probHit, probShort, probMax, probRand)
 
     def beam_range_finder_model(self, z_t1_arr, x_t1):
         """

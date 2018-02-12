@@ -28,15 +28,13 @@ def visualize_timestep(X_bar, tstep):
     plt.pause(0.00001)
     scat.remove() # comment this out for a quick'n'dirty trjactory visualizer
 
-def visualize_lasers(X_bar_new, z_t, time_idx, fig):
+def visualize_lasers(pos, z_t, time_idx, fig):
     ax = fig.add_subplot(111)
     del ax.lines[:] # refresh
 
-    x_locs = X_bar_new[:, 0] / 10.0
-    y_locs = X_bar_new[:, 1] / 10.0
-    theta  = X_bar_new[:, 2]
-
-    print theta
+    x_locs = pos[0] / 10.0
+    y_locs = pos[1] / 10.0
+    theta  = pos[2]
 
     lines = []
     for i in range(0,len(z_t),10): # show every 10th measurement
@@ -97,7 +95,7 @@ def main():
     sensor_model = SensorModel(map_obj)
     resampler = Resampling()
 
-    num_particles = 1 # 500
+    num_particles = 30
     X_bar = init_particles_random(num_particles, occupancy_map)
 
     vis_flag = 1
@@ -155,13 +153,11 @@ def main():
                 # w_t = 1/num_particles
                 X_bar_new[m, :] = np.hstack((x_t1, w_t))
 
-                if vis_flag:
-                    visualize_lasers(X_bar_new, z_t, time_idx, fig)
+                if vis_flag and num_particles == 1:
+                    visualize_lasers(x_t1, z_t, time_idx, fig)
 
             else:
                 X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
-
-
 
         X_bar = X_bar_new
         u_t0 = u_t1
@@ -169,7 +165,7 @@ def main():
         # """
         # RESAMPLING
         # # """
-        # X_bar = resampler.low_variance_sampler(X_bar)
+        X_bar = resampler.low_variance_sampler(X_bar)
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)

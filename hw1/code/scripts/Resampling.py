@@ -13,20 +13,12 @@ class Resampling:
         TODO : Initialize resampling process parameters here
         """
 
-        self.M = 30 # number of paticles to sample
-
     def multinomial_sampler(self, X_bar):
 
         """
         param[in] X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
-
-        """
-        TODO : Add your code here
-        """
-
-        return X_bar_resampled
 
     def low_variance_sampler(self, X_bar):
 
@@ -35,22 +27,25 @@ class Resampling:
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
 
-        # pdb.set_trace()
+        M = len(X_bar)
+        wt = np.array(X_bar[:,3])
 
-        wt = X_bar[:,3]
+        if sum(wt) != 1.0:
+            wt = wt/sum(wt) # Normalize to 1
 
-        X_bar_resampled = np.empty([self.M, 4])
-        r = np.random.uniform(0, 1/self.M) # 0 to M^-1
+        X_bar_resampled = np.empty([M, 4])
+        r = np.random.uniform(0, 1/float(M))
         c = wt[0]
-        i = 1
-        for m in range(0, self.M):
-            u = r + (m - 1) * self.M**-1
+        i = 0
+
+        for m in range(0, M):
+            u = r + (m-1)*1/float(M)
+
             while u > c:
                 i = i + 1
                 c = c + wt[i]
-            X_bar_resampled[m,:] = X_bar[i]
 
-        pdb.set_trace()
+            X_bar_resampled[m,:] = X_bar[i]
 
         return X_bar_resampled
 
