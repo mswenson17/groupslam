@@ -205,7 +205,6 @@ def main():
             job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
             # apply(particle_update, job_args)
             results.append(pool.apply_async(particle_update, job_args))
-            # results = pool.map(particle_update, job_args)
 
         pool.close()
         pool.join()
