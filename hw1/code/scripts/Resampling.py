@@ -20,12 +20,6 @@ class Resampling:
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
 
-        """
-        TODO : Add your code here
-        """
-
-        return X_bar_resampled
-
     def low_variance_sampler(self, X_bar):
 
         """
@@ -33,10 +27,26 @@ class Resampling:
         param[out] X_bar_resampled : [num_particles x 4] sized array containing [x, y, theta, wt] values for resampled set of particles
         """
 
-        """
-        TODO : Add your code here
-        """
-        
+        M = len(X_bar)
+        wt = np.array(X_bar[:,3])
+
+        if sum(wt) != 1.0:
+            wt = wt/sum(wt) # Normalize to 1
+
+        X_bar_resampled = np.empty([M, 4])
+        r = np.random.uniform(0, 1/float(M))
+        c = wt[0]
+        i = 0
+
+        for m in range(0, M):
+            u = r + (m-1)*1/float(M)
+
+            while u > c:
+                i = i + 1
+                c = c + wt[i]
+
+            X_bar_resampled[m,:] = X_bar[i]
+
         return X_bar_resampled
 
 if __name__ == "__main__":
