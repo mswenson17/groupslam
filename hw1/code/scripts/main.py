@@ -1,4 +1,3 @@
-
 import numpy as np
 import sys
 import pdb
@@ -12,9 +11,11 @@ from Resampling import Resampling
 from matplotlib import pyplot as plt
 from matplotlib import figure as fig
 import time
+from functools import partial
+from multiprocessing import Pool
 
 
-def visualize_map(occupancy_map, fig):
+def visualize_map(occupancy_map):
     # plt.switch_backend('TkAgg')
     mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
     plt.ion()
@@ -47,7 +48,7 @@ def visualize_lasers(pos, z_t, time_idx, fig):
         lines.append(ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b'))
 
 
-def init_particles_random(num_particles, occupancy_map):
+def init_particles_random(num_particles):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
@@ -72,18 +73,17 @@ def init_particles_freespace(num_particles, occupancy_map):
     # (in free space areas of the map)
 
     freeSpaceThreshold = 0.1
-
     X_bar_init = np.empty([0, 4])
 
     while len(X_bar_init) < num_particles:
 
-        x = np.random.uniform(3000, 7000)
-        y = np.random.uniform(0, 8000)
+        y = np.random.uniform(3000, 7000)
+        x = np.random.uniform(0, 8000)
         theta = np.random.uniform()
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
-            X_bar_init = np.vstack((X_bar_init, [x, y, theta, 1 / float(num_particles)]))
+            X_bar_init = np.vstack((X_bar_init, [y, x, theta, 1 / float(num_particles)]))
 
     return X_bar_init
 
@@ -94,7 +94,75 @@ def get_laser_odom(robot_odom):
             robot_odom[2])
 
 
+def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
+    global motion_model, sensor_model
+    x_t1 = np.zeros((1, 3), dtype=np.float64)
+
+    x_t0 = particle[0:3]
+    """
+    MOTION MODEL
+    """
+    if ~(u_t0[0:3] == u_t1[0:3]).all():
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+    else:
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = x_t0
+
+    """ SENSOR MODEL """
+    if (meas_type == "L"):
+        # x_t0 = X_bar[m, 0:3]
+        x_t1 = motion_model.update(u_t0, u_t1, x_t0)
+        odometry_laser = get_laser_odom(x_t1)
+
+        z_t = ranges
+        # print("odom laser: " + str(odometry_laser))
+        w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
+        # w_t = 1/num_particles
+        particle_update = np.hstack((x_t1, w_t))
+
+        # if vis_flag and num_particles == 1:
+        # visualize_lasers(x_t1, z_t, time_idx, fig)
+
+    else:
+        particle_update = np.hstack((x_t1, particle[3]))
+
+    return particle_update
+
+
+def pool_init():
+    global map_obj, occupancy_map, motion_model, sensor_model
+    """
+    Initialize Parameters
+    """
+    src_path_map = '../data/map/wean.dat'
+
+    map_obj = MapReader(src_path_map)
+    occupancy_map = map_obj.get_map()
+
+    motion_model = MotionModel()
+    sensor_model = SensorModel(map_obj)
+
 def main():
+    """
+    Initialize Parameters
+    """
+    src_path_map = '../data/map/wean.dat'
+
+    map_obj = MapReader(src_path_map)
+    occupancy_map = map_obj.get_map()
+
+    src_path_log = '../data/log/robotdata1.log'
+    logfile = open(src_path_log, 'r')
+
+    resampler = Resampling()
+
+    num_particles = 50
+    vis_flag = 1
+
+    if vis_flag:
+        visualize_map(occupancy_map)
+
     """
     Description of variables used
     u_t0 : particle state odometry reading [x, y, theta] at time (t-1) [odometry_frame]
@@ -104,37 +172,22 @@ def main():
     X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
     z_t : array of 180 range measurements for each laser scan
     """
-
-    """
-    Initialize Parameters
-    """
-    src_path_map = '../data/map/wean.dat'
-    src_path_log = '../data/log/robotdata1.log'
-
-    map_obj = MapReader(src_path_map)
-    occupancy_map = map_obj.get_map()
-    logfile = open(src_path_log, 'r')
-
-    motion_model = MotionModel()
-    sensor_model = SensorModel(map_obj)
-    resampler = Resampling()
-
-    num_particles = 500
-    X_bar = init_particles_random(num_particles, occupancy_map)
-
-    vis_flag = 1
-    if vis_flag:
-        fig = plt.figure()
+    # pf = ParticleFilter()
 
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    if vis_flag:
-        visualize_map(occupancy_map, fig)
+    X_bar = init_particles_random(num_particles, occupancy_map)
+
+    pool = Pool(8, pool_init)
 
     i = 0
     first_time_idx = True
+    i = 0
     for time_idx, line in enumerate(logfile):
+        i += 1
+        if i > 10:
+            return
 
         i += 1
         if i > 10:
@@ -144,7 +197,7 @@ def main():
         # convert measurement values from string to double
         meas_vals = np.fromstring(line[2:], dtype=np.float64, sep=' ')
 
-        odometry_robot = meas_vals[0:3]  # odometry reading [x, y, theta] in odometry frame
+        u_t1 = meas_vals[0:3]  # odometry reading [x, y, theta] in odometry frame
         time_stamp = meas_vals[-1]
 
         # if ((time_stamp <= 0.0) | (meas_type == "O")): # ignore pure odometry measurements for now (faster debugging)
@@ -156,44 +209,36 @@ def main():
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
 
         if (first_time_idx):
-            u_t0 = odometry_robot
+            u_t0 = u_t1
             first_time_idx = False
             continue
+        X_bar_new = np.empty((0, 4), dtype=np.float64)
 
-        X_bar_new = np.zeros((num_particles, 4), dtype=np.float64)
-        u_t1 = odometry_robot
-        for m in range(0, num_particles):
+        p_up = partial(particle_update, meas_type, u_t0, u_t1, ranges, time_stamp)
+        results = pool.map(p_up, X_bar)
+        X_bar_new = np.squeeze(results)
 
-            """
-            MOTION MODEL
-            """
-            if ~(u_t0[0:3] == u_t1[0:3]).all():
-                x_t0 = X_bar[m, 0:3]
-                x_t1 = motion_model.update(u_t0, u_t1, x_t0)
-            else:
-                x_t0 = X_bar[m, 0:3]
-                x_t1 = x_t0
+        # for p in range(0, pf.num_particles):
+        # results = list()
+        # for p in X_bar:
+            # job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
+            # # apply(particle_update, job_args)
+            # results.append(pool.apply_async(particle_update, job_args))
 
-            """
-            SENSOR MODEL
-            """
-            if (meas_type == "L"):
-                x_t0 = X_bar[m, 0:3]
-                x_t1 = motion_model.update(u_t0, u_t1, x_t0)
-                odometry_laser = get_laser_odom(x_t1)
-
-                z_t = ranges
-                # print("odom laser: " + str(odometry_laser))
-                w_t = sensor_model.beam_range_finder_model(z_t, odometry_laser)
-                # w_t = 1/num_particles
-                X_bar_new[m, :] = np.hstack((x_t1, w_t))
-
-                if vis_flag and num_particles == 1:
-                    visualize_lasers(x_t1, z_t, time_idx, fig)
-
-            else:
-                X_bar_new[m, :] = np.hstack((x_t1, X_bar[m, 3]))
-
+        # pool.close()
+        # pool.join()
+        # print("results")
+        # print(results)
+        # print("X_bar")
+        # print(X_bar)
+        # print(np.shape(results))
+        # print(np.shape(X_bar))
+        # for res in results:
+            # p_updated = res.get(timeout=10)
+            # X_bar_new = np.vstack((X_bar_new, p_updated))
+            # print(p_updated)
+        # print(X_bar_new)
+        # print(np.array(X_bar_new))
         X_bar = X_bar_new
         u_t0 = u_t1
 
