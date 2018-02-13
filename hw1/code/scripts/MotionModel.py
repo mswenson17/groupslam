@@ -15,10 +15,10 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.05  # rotation
-        self.alpha_2 = 0.05  # rotation
-        self.alpha_3 = 5.  # linear
-        self.alpha_4 = 5.  # linear
+        self.alpha_1 = 0.000005  # rotation
+        self.alpha_2 = 0.000005  # rotation
+        self.alpha_3 = 0.05  # linear
+        self.alpha_4 = 0.05  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 
@@ -34,9 +34,9 @@ class MotionModel:
         # pdb.set_trace()
 
         # find relative change in odometry since last measurement
-        delta_rot1 = math.atan2((u_t1[1] - u_t0[1]) % math.pi, (u_t1[0] - u_t0[0]) % math.pi) - u_t0[2]
+        delta_rot1 = math.atan2((u_t1[1] - u_t0[1]), (u_t1[0] - u_t0[0]) % math.pi) - u_t0[2]
         delta_trans = math.sqrt((u_t0[0] - u_t1[0])**2 + (u_t0[1] - u_t1[1])**2)
-        delta_rot2 = u_t1[2] - u_t0[2] - delta_rot1
+        delta_rot2 = (u_t1[2] - u_t0[2]) % np.pi - delta_rot1
 
         # update previous position based on odometry and uncertainty
         sigma_delta_rot1 = math.sqrt(self.alpha_1 * abs(delta_rot1) + self.alpha_2 * abs(delta_trans))
@@ -53,14 +53,21 @@ class MotionModel:
         sigma_delta_rot2 = math.sqrt(self.alpha_1 * abs(delta_rot2) + self.alpha_2 * abs(delta_trans))
         _delta_rot2 = delta_rot2 - np.random.normal(self.mu, sigma_delta_rot2)
 
+        # print("Sample")
+        # print(x_t0)
+        # print((_delta_trans - delta_trans,
+               # 180 * (_delta_rot1 - delta_rot1) / np.pi,
+               # 180 * (_delta_rot2 - delta_rot2) / np.pi))
+
         # assign to updated odometry
         x = x_t0[0] + _delta_trans * math.cos(x_t0[2] + _delta_rot1)  # rad
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
         theta = x_t0[2] + _delta_rot1 + _delta_rot2
 
-        x_t1 = [x, y, theta]
+        x = x_t0[0] + (u_t1[0] - u_t0[0])
+        y = x_t0[1] + (u_t1[1] - u_t0[1])
 
-        # print(x_t1- x_t0)
+        x_t1 = [x, y, theta]
 
         return x_t1
 

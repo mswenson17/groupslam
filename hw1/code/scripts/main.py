@@ -52,10 +52,13 @@ def init_particles_random(num_particles):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
-    y0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
-    x0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
-    theta0_vals = np.random.uniform(-3.14, 3.14, (num_particles, 1))
+    y0_vals = np.random.uniform(3900, 4100, (num_particles, 1))
+    x0_vals = np.random.uniform(3900, 4100, (num_particles, 1))
+    theta0_vals = np.random.uniform(4.36, 4.37, (num_particles, 1))
 
+    # y0_vals = np.random.uniform(3999, 4001, (num_particles, 1))
+    # x0_vals = np.random.uniform(3999, 4001, (num_particles, 1))
+    # theta0_vals = np.random.uniform(4.7, 4.72, (num_particles, 1))
     # initialize weights for all particles
     w0_vals = np.ones((num_particles, 1), dtype=np.float64)
     w0_vals = w0_vals / num_particles
@@ -110,7 +113,7 @@ def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
         x_t1 = x_t0
 
     """ SENSOR MODEL """
-    if (meas_type == "L"):
+    if (meas_type == "LASER"):
         # x_t0 = X_bar[m, 0:3]
         x_t1 = motion_model.update(u_t0, u_t1, x_t0)
         odometry_laser = get_laser_odom(x_t1)
@@ -158,7 +161,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 10  # 500
     vis_flag = 1
 
     if vis_flag:
@@ -178,16 +181,17 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    X_bar = init_particles_freespace(num_particles, occupancy_map)
+    # X_bar = init_particles_freespace(num_particles, occupancy_map)
+    X_bar = init_particles_random(num_particles)
 
-    pool = Pool(8, pool_init)
+    pool = Pool(1, pool_init)
 
     first_time_idx = True
-    i = 0
+    # i = 0
     for time_idx, line in enumerate(logfile):
-        i += 1
-        if i > 10:
-            return
+        # i += 1
+        # if i > 10:
+            # return
 
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
         meas_type = line[0]  # L : laser scan measurement, O : odometry measurement
@@ -212,15 +216,8 @@ def main():
         X_bar_new = np.empty((0, 4), dtype=np.float64)
 
         p_up = partial(particle_update, meas_type, u_t0, u_t1, ranges, time_stamp)
-        results = pool.map(p_up, X_bar)
+        results = pool.map(p_up, X_bar, chunksize=int(math.ceil(num_particles / 8)))
         X_bar_new = np.squeeze(results)
-
-        # for p in range(0, pf.num_particles):
-        # results = list()
-        # for p in X_bar:
-            # job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
-            # # apply(particle_update, job_args)
-            # results.append(pool.apply_async(particle_update, job_args))
 
         # pool.close()
         # pool.join()
@@ -230,19 +227,14 @@ def main():
         # print(X_bar)
         # print(np.shape(results))
         # print(np.shape(X_bar))
-        # for res in results:
-            # p_updated = res.get(timeout=10)
-            # X_bar_new = np.vstack((X_bar_new, p_updated))
-            # print(p_updated)
-        # print(X_bar_new)
-        # print(np.array(X_bar_new))
+
         X_bar = X_bar_new
         u_t0 = u_t1
 
         # """
         # RESAMPLING
         # # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
         if vis_flag:
             visualize_timestep(X_bar, time_idx)

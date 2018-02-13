@@ -31,7 +31,7 @@ class MapReader:
         # print(self._cosines[1,...])
         # print(np.shape(self._sines))
 
-        # print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
+        print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
 
     def visualize_map(self):
         # fig = plt.figure()
