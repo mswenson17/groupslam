@@ -1,7 +1,7 @@
-import sys
 import numpy as np
 import math
-import pdb
+# import sys
+# import pdb
 
 
 class MotionModel:
@@ -15,10 +15,10 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.05  # rotation
-        self.alpha_2 = 0.05  # rotation
-        self.alpha_3 = 5.  # linear
-        self.alpha_4 = 5.  # linear
+        self.alpha_1 = 0.00001  # rotation
+        self.alpha_2 = 0.00001  # rotation
+        self.alpha_3 = 0.5  # linear
+        self.alpha_4 = 0.5  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 

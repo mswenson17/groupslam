@@ -52,9 +52,9 @@ def init_particles_random(num_particles):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
-    y0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
-    x0_vals = np.random.uniform(3800, 4200, (num_particles, 1))
-    theta0_vals = np.random.uniform(-3.14, 3.14, (num_particles, 1))
+    y0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
+    x0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
+    theta0_vals = np.random.uniform(4.69, 4.7, (num_particles, 1))
 
     # initialize weights for all particles
     w0_vals = np.ones((num_particles, 1), dtype=np.float64)
@@ -77,9 +77,9 @@ def init_particles_freespace(num_particles, occupancy_map):
 
     while len(X_bar_init) < num_particles:
 
-        y = np.random.uniform(3000, 7000)
+        y = np.random.uniform(0, 8000)
         x = np.random.uniform(0, 8000)
-        theta = np.random.uniform()
+        theta = np.random.uniform(-3.14, 3.14)
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
@@ -177,21 +177,15 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    X_bar = init_particles_random(num_particles, occupancy_map)
+    # X_bar = init_particles_freespace(num_particles, occupancy_map)
+    X_bar = init_particles_random(num_particles)
 
     pool = Pool(8, pool_init)
 
-    i = 0
     first_time_idx = True
-    i = 0
+    last_time_stamp = 0
     for time_idx, line in enumerate(logfile):
-        i += 1
-        if i > 10:
-            return
 
-        i += 1
-        if i > 10:
-            return
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
         meas_type = line[0]  # L : laser scan measurement, O : odometry measurement
         # convert measurement values from string to double
@@ -218,37 +212,17 @@ def main():
         results = pool.map(p_up, X_bar)
         X_bar_new = np.squeeze(results)
 
-        # for p in range(0, pf.num_particles):
-        # results = list()
-        # for p in X_bar:
-            # job_args = (motion_model, sensor_model, p, meas_type, u_t0, u_t1, ranges, time_stamp)
-            # # apply(particle_update, job_args)
-            # results.append(pool.apply_async(particle_update, job_args))
-
-        # pool.close()
-        # pool.join()
-        # print("results")
-        # print(results)
-        # print("X_bar")
-        # print(X_bar)
-        # print(np.shape(results))
-        # print(np.shape(X_bar))
-        # for res in results:
-            # p_updated = res.get(timeout=10)
-            # X_bar_new = np.vstack((X_bar_new, p_updated))
-            # print(p_updated)
-        # print(X_bar_new)
-        # print(np.array(X_bar_new))
         X_bar = X_bar_new
         u_t0 = u_t1
 
         # """
         # RESAMPLING
         # # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag:
+        if vis_flag and time_stamp - last_time_stamp > 1:
             visualize_timestep(X_bar, time_idx)
+            last_time_stamp = time_stamp
 
 
 if __name__ == "__main__":
