@@ -8,7 +8,7 @@ class MapReader:
     def __init__(self, src_path_map):
 
         self._occupancy_map = np.genfromtxt(src_path_map, skip_header=7)
-        self._occupancy_map[self._occupancy_map < 0] = -1
+        self._occupancy_map[self._occupancy_map < 0] = .5
         self._occupancy_map[self._occupancy_map > 0] = 1 - self._occupancy_map[self._occupancy_map > 0]
         self._occupancy_map = np.flipud(self._occupancy_map)
         # self._occupancy_map = np.transpose(self._occupancy_map)
@@ -31,7 +31,7 @@ class MapReader:
         # print(self._cosines[1,...])
         # print(np.shape(self._sines))
 
-        # print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
+        print('Finished reading 2D map of size : ' + '(' + str(self._size_x) + ',' + str(self._size_y) + ')')
 
     def visualize_map(self):
         # fig = plt.figure()
@@ -72,11 +72,12 @@ class MapReader:
         # fig = plt.figure()
         # plt.switch_backend('TkAgg')
         wall = self._occupancy_map[x_vals.astype(int), y_vals.astype(int)]
-        edge = np.where(wall > .9)[0]
+        edge = np.where(wall > .1)[0]
         if len(edge) > 0:
             point = (x_vals[edge[0]], y_vals[edge[0]])
         else:
             point = (0., 0.)
+
         if debug:
             print(x_t1)
             print(cosines)
