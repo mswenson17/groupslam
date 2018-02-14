@@ -147,8 +147,6 @@ def main():
     """
     Initialize Parameters
     """
-    num_particles = 2000
-
     src_path_map = '../data/map/wean.dat'
 
     map_obj = MapReader(src_path_map)
@@ -159,7 +157,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 1000
+    num_particles = 3
     vis_flag = 1
 
     if vis_flag:
@@ -223,9 +221,9 @@ def main():
         # """
         # RESAMPLING
         # # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag and time_stamp - last_time_stamp > .3:
+        if vis_flag and time_stamp - last_time_stamp > 1:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
 
