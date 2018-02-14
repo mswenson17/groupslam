@@ -7,7 +7,6 @@ from MapReader import MapReader
 from MotionModel import MotionModel
 from SensorModel import SensorModel
 from Resampling import Resampling
-
 from matplotlib import pyplot as plt
 # from matplotlib import figure as fig
 from functools import partial
@@ -20,13 +19,13 @@ def visualize_map(occupancy_map):
     # mng.resize(*mng.window.maxsize())
     plt.ion()
     # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
-    plt.imshow(np.transpose(occupancy_map), cmap='Greys')
+    plt.imshow(occupancy_map, cmap='Greys')
     plt.axis([0, 800, 0, 800])
 
 
 def visualize_timestep(X_bar, tstep):
-    x_locs = X_bar[:, 0] / 10.0
-    y_locs = X_bar[:, 1] / 10.0
+    x_locs = X_bar[:, 1] / 10.0
+    y_locs = X_bar[:, 0] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
     plt.pause(0.00001)
     scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
@@ -145,6 +144,7 @@ def pool_init():
     motion_model = MotionModel()
     sensor_model = SensorModel(map_obj)
 
+
 def main():
     """
     Initialize Parameters
@@ -159,7 +159,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 50
+    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
@@ -179,13 +179,14 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    # X_bar = init_particles_freespace(num_particles, occupancy_map)
-    X_bar = init_particles_random(num_particles)
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
+    # X_bar = init_particles_random(num_particles)
 
     pool = Pool(8, pool_init)
 
     first_time_idx = True
     last_time_stamp = 0
+    plot_index = 0
     for time_idx, line in enumerate(logfile):
 
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
@@ -222,7 +223,7 @@ def main():
         # # """
         X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag and time_stamp - last_time_stamp > .5:
+        if vis_flag and time_stamp - last_time_stamp > .3:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
 

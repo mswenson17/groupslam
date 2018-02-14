@@ -20,11 +20,6 @@ class MotionModel:
         self.alpha_3 = 0.5  # linear
         self.alpha_4 = 0.5  # linear
 
-        #self.alpha_1 = 0.0  # rotation
-        #self.alpha_2 = 0.0  # rotation
-        #self.alpha_3 = 0.0  # linear
-        #self.alpha_4 = 0.0  # linear
-
         self.mu = 0.0  # zero mean noise for sampling
 
     def update(self, u_t0, u_t1, x_t0):
@@ -63,8 +58,11 @@ class MotionModel:
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
         theta = x_t0[2] + _delta_rot1 + _delta_rot2
 
-        x_t1 = [x, y, theta]
+        theta = x_t0[2] + u_t1[2] - u_t0[2]
+        y = x_t0[1] + u_t1[1] - u_t0[1]
+        x = x_t0[0] + u_t0[0] - u_t1[0]
 
+        x_t1 = [x, y, theta]
         # print(x_t1- x_t0)
 
         return x_t1

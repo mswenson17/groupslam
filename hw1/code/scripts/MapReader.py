@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from matplotlib import pyplot as plt
 # from matplotlib import figure as fig
 
@@ -25,7 +25,6 @@ class MapReader:
         for idx, point in np.ndenumerate(points):
             self._sines[idx] = np.sin(idx[0] * np.pi / 180.) * point
             self._cosines[idx] = np.cos(idx[0] * np.pi / 180.) * point
-            # print(str(idx) + ": " + str(point) + " val: "+ str(np.sin(idx[0] * np.pi / 180.) * point) + " sin: "+str(self._sines[idx]))
 
         # print(self._sines[1,...])
         # print(self._cosines[1,...])
