@@ -50,6 +50,7 @@ class SensorModel:
             z_real.append(dist)
 
         q = 0
+        p = 1
         for z_r, z_t in zip(z_real, z_t1_arr):
             # define array of probability distributions to combine and sample from
             # prob = (1, 1, 1, 1)
@@ -76,7 +77,10 @@ class SensorModel:
             for p, s in zip(prob, self.scale):
                 q += p*s  # might need to use log sum here...
             #print(down)
-        return q
+                
+            #From Density to Probability
+            p=p*q
+        return p
 
 
 if __name__ == '__main__':
