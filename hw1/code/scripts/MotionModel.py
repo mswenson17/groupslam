@@ -29,7 +29,6 @@ class MotionModel:
         param[in] x_t0 : particle state belief [x, y, theta] at time (t-1) [world_frame]
         param[out] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
         """
-
         # [Chapter 5, Page 122]
         # pdb.set_trace()
 
@@ -49,7 +48,7 @@ class MotionModel:
             sigma_delta_trans = 0.001
             # print(delta_trans)
         _delta_trans = delta_trans - np.random.normal(self.mu, sigma_delta_trans)
-
+        # print((_delta_trans - delta_trans, _delta_rot1 - delta_rot1))
         sigma_delta_rot2 = math.sqrt(self.alpha_1 * abs(delta_rot2) + self.alpha_2 * abs(delta_trans))
         _delta_rot2 = delta_rot2 - np.random.normal(self.mu, sigma_delta_rot2)
 
@@ -57,6 +56,9 @@ class MotionModel:
         x = x_t0[0] + _delta_trans * math.cos(x_t0[2] + _delta_rot1)  # rad
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
         theta = x_t0[2] + _delta_rot1 + _delta_rot2
+
+        # y = x_t0[1] + u_t1[1] - u_t0[1]
+        # x = x_t0[0] + u_t0[0] - u_t1[0]
 
         x_t1 = [x, y, theta]
 

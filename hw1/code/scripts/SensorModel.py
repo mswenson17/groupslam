@@ -20,19 +20,19 @@ class SensorModel:
         TODO : Initialize Sensor Model parameters here
         """
         self.norm_std = 100.
-        self.max_range = 8183. # Zmax = 8333
+        self.max_range = 8183.  # Zmax = 8333
 
-        self.lambda2=0.001
-        self.sqrt2=math.sqrt(2.)
+        self.lambda2 = 0.001
+        self.sqrt2 = math.sqrt(2.)
         self.map = map_reader
 
         probShort = 0.15
         probMax = 0.05
         probRand = 0.15
         probHit = 1. - (probShort + probMax + probRand)
-        
-        self.deltaRes=10.
-        
+
+        self.deltaRes = 10.
+
         # relative weights of each distribution in final pseudodistribution
         self.scale = (probHit, probShort, probMax, probRand)
 
@@ -44,9 +44,9 @@ class SensorModel:
         """
 
         z_real = list()
-        for i in range(0, 181, 20): # take every 10th measurement
-            real_loc = self.map.raytrace(x_t1, i) #* np.pi / 360
-            print(real_loc)
+        for i in range(0, 181, 20):  # take every 10th measurement
+            real_loc = self.map.raytrace(x_t1, i)  # * np.pi / 360
+            # print(real_loc)
             dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
             z_real.append(dist)
 
@@ -55,28 +55,31 @@ class SensorModel:
             # define array of probability distributions to combine and sample from
             # prob = (1, 1, 1, 1)
             prob = list()
-           
+
             # Auxiliar local variables
-            self.x1=z_t-z_r-self.deltaRes/2.
-            self.x2=z_t-z_r+self.deltaRes/2.
-            self.div1=self.norm_std*self.sqrt2
-            self.x3=-z_r+self.max_range
-            up=-math.erf(self.x1/self.div1)+math.erf(self.x2/self.div1)+.0000001
-            down=math.erf(z_r/self.div1)+math.erf(self.x3/self.div1)
-            down=2;
-            
-            if(z_r>=self.max_range - self.deltaRes/2) and (z_r<=self.max_range + self.deltaRes/2): self.flag=1.
-            else: self.flag=0.   
+            self.x1 = z_t - z_r - self.deltaRes / 2.
+            self.x2 = z_t - z_r + self.deltaRes / 2.
+            self.div1 = self.norm_std * self.sqrt2
+            self.x3 = -z_r + self.max_range
+            up = -math.erf(self.x1 / self.div1) + math.erf(self.x2 / self.div1) + .0000001
+            down = math.erf(z_r / self.div1) + math.erf(self.x3 / self.div1)
+            down = 2
+
+            if(z_r >= self.max_range - self.deltaRes / 2) and (z_r <= self.max_range + self.deltaRes / 2):
+                self.flag = 1.
+            else:
+                self.flag = 0.
 
             # Probabilities
-            prob.append(up/down)
-            prob.append(math.exp(-1./2.*(2.*min(z_r,z_t)-2.*z_r+self.deltaRes)*self.lambda2)*(1.-math.exp(self.deltaRes*self.lambda2))/(1.-math.exp(z_r*self.lambda2)))
+            prob.append(up / down)
+            prob.append(math.exp(-1. / 2. * (2. * min(z_r, z_t) - 2. * z_r + self.deltaRes) * self.lambda2)
+                        * (1. - math.exp(self.deltaRes * self.lambda2)) / (1. - math.exp(z_r * self.lambda2)))
             prob.append(self.flag)
-            prob.append(self.deltaRes/self.max_range)
-        
+            prob.append(self.deltaRes / self.max_range)
+
             for p, s in zip(prob, self.scale):
-                q += p*s  # might need to use log sum here...
-            #print(down)
+                q += p * s  # might need to use log sum here...
+            # print(down)
         return q
 
 

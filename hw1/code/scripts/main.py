@@ -20,7 +20,7 @@ def visualize_map(occupancy_map):
     mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
     plt.ion()
     # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
-    plt.imshow(np.transpose(occupancy_map), cmap='Greys')
+    plt.imshow(occupancy_map, cmap='Greys')
     plt.axis([0, 800, 0, 800])
 
 
@@ -28,6 +28,7 @@ def visualize_timestep(X_bar, tstep):
     x_locs = X_bar[:, 0] / 10.0
     y_locs = X_bar[:, 1] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
+    # plt.savefig("../images/motion_model_testing/" + '{0:04d}'.format(tstep))
     plt.pause(0.00001)
     scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
 
@@ -52,9 +53,9 @@ def init_particles_random(num_particles):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
-    y0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
-    x0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
-    theta0_vals = np.random.uniform(4.69, 4.7, (num_particles, 1))
+    y0_vals = np.random.uniform(3900, 4201, (num_particles, 1))
+    x0_vals = np.random.uniform(3900, 4201, (num_particles, 1))
+    theta0_vals = np.random.uniform(3.14, 3.15, (num_particles, 1))
 
     # initialize weights for all particles
     w0_vals = np.ones((num_particles, 1), dtype=np.float64)
@@ -83,7 +84,7 @@ def init_particles_freespace(num_particles, occupancy_map):
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
-            X_bar_init = np.vstack((X_bar_init, [y, x, theta, 1 / float(num_particles)]))
+            X_bar_init = np.vstack((X_bar_init, [x, y, theta, 1 / float(num_particles)]))
 
     return X_bar_init
 
@@ -110,7 +111,7 @@ def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
         x_t1 = x_t0
 
     """ SENSOR MODEL """
-    if (meas_type == "L"):
+    if (meas_type == "L" and False):
         # x_t0 = X_bar[m, 0:3]
         x_t1 = motion_model.update(u_t0, u_t1, x_t0)
         odometry_laser = get_laser_odom(x_t1)
@@ -143,6 +144,7 @@ def pool_init():
     motion_model = MotionModel()
     sensor_model = SensorModel(map_obj)
 
+
 def main():
     """
     Initialize Parameters
@@ -157,7 +159,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 50
+    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
@@ -177,13 +179,14 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    # X_bar = init_particles_freespace(num_particles, occupancy_map)
-    X_bar = init_particles_random(num_particles)
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
+    # X_bar = init_particles_random(num_particles)
 
     pool = Pool(8, pool_init)
 
     first_time_idx = True
     last_time_stamp = 0
+    plot_index = 0
     for time_idx, line in enumerate(logfile):
 
         # Read a single 'line' from the log file (can be either odometry or laser measurement)
@@ -213,16 +216,19 @@ def main():
         X_bar_new = np.squeeze(results)
 
         X_bar = X_bar_new
-        u_t0 = u_t1
 
         # """
         # RESAMPLING
         # # """
+        # if ~(u_t0[0:3] == u_t1[0:3]).all():
+            # if (meas_type == "L"):
         # X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag and time_stamp - last_time_stamp > 1:
-            visualize_timestep(X_bar, time_idx)
+        u_t0 = u_t1
+        if vis_flag:  # and time_stamp - last_time_stamp > .5 and time_stamp < 50:
+            visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
+            plot_index += 1
 
 
 if __name__ == "__main__":
