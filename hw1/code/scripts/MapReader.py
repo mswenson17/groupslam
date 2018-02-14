@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np 
 from matplotlib import pyplot as plt
 # from matplotlib import figure as fig
 
@@ -39,7 +39,7 @@ class MapReader:
         mng = plt.get_current_fig_manager()
         mng.resize(*mng.window.maxsize())
         plt.ion()
-        plt.imshow(self._occupancy_map, cmap='Greys')
+        plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
         plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
         plt.draw()
         plt.pause(10)
@@ -71,7 +71,7 @@ class MapReader:
         y_vals[y_vals >= self._size_y / self._resolution] = self._size_y / self._resolution - 1
         # fig = plt.figure()
         # plt.switch_backend('TkAgg')
-        wall = self._occupancy_map[y_vals.astype(int), x_vals.astype(int)]
+        wall = self._occupancy_map[x_vals.astype(int), y_vals.astype(int)]
         edge = np.where(wall > .1)[0]
         if len(edge) > 0:
             point = (x_vals[edge[0]], y_vals[edge[0]])
@@ -79,19 +79,20 @@ class MapReader:
             point = (0., 0.)
 
         if debug:
-            # print(x_t1)
-            # print(cosines)
-            # print(x_vals)
+            print(x_t1)
+            print(cosines)
+            print(x_vals)
             print("raytrace: " + str(point))
 
+            print("points")
             print(wall.shape)
             print(wall)
-            print("wall point")
             print(edge[0])
+            print("wall point")
             mng = plt.get_current_fig_manager()
             mng.resize(*mng.window.maxsize())
             plt.ion()
-            plt.imshow(self._occupancy_map, cmap='Greys')
+            plt.imshow(np.transpose(self._occupancy_map), cmap='Greys')
             plt.axis([0, self._size_x / 10, 0, self._size_y / 10])
             plt.plot(x_vals, y_vals)
 
@@ -107,5 +108,5 @@ if __name__ == "__main__":
 
     src_path_map = '../data/map/wean.dat'
     map1 = MapReader(src_path_map)
-    map1.raytrace((600, 130, 0), 130, debug=True)
-    map1.visualize_map()
+    map1.raytrace((90, 570, 0), 40)
+    # map1.visualize_map()

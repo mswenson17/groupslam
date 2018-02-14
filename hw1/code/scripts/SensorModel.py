@@ -38,9 +38,9 @@ class SensorModel:
         """
 
         z_real = list()
-        for i in range(0, 181, 20):  # take every 10th measurement
-            real_loc = self.map.raytrace(x_t1, i)  # * np.pi / 360
-            # print(real_loc)
+        for i in range(0, 181, 20): # take every 10th measurement
+            real_loc = self.map.raytrace(x_t1, i) #* np.pi / 360
+            print(real_loc)
             dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
             z_real.append(dist)
 
