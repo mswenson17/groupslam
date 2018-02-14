@@ -80,6 +80,8 @@ def init_particles_freespace(num_particles, occupancy_map):
 
         y = np.random.uniform(0, 8000)
         x = np.random.uniform(0, 8000)
+        #y = np.random.uniform(4000, 8000)
+        #x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(-3.14, 3.14)
 
         result = occupancy_map[int(y / 10), int(x / 10)]
@@ -220,11 +222,8 @@ def main():
         # """
         # RESAMPLING
         # # """
-        # if ~(u_t0[0:3] == u_t1[0:3]).all():
-            # if (meas_type == "L"):
-        # X_bar = resampler.low_variance_sampler(X_bar)
+        X_bar = resampler.low_variance_sampler(X_bar)
 
-        u_t0 = u_t1
         if vis_flag:  # and time_stamp - last_time_stamp > .5 and time_stamp < 50:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
