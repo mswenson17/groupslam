@@ -61,11 +61,6 @@ class SensorModel:
                 self.flag = 1.
             else:
                 self.flag = 0.
-
-            if(z_r >= self.max_range - self.deltaRes / 2) and (z_r <= self.max_range + self.deltaRes / 2):
-                self.flag = 1.
-            else:
-                self.flag = 0.
             # Probabilities
             q += (up / down) * self.probHit
             q += unexpected * self.probShort
