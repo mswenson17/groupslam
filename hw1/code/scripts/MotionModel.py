@@ -20,6 +20,11 @@ class MotionModel:
         self.alpha_3 = 0.5  # linear
         self.alpha_4 = 0.5  # linear
 
+        #self.alpha_1 = 0.0  # rotation
+        #self.alpha_2 = 0.0  # rotation
+        #self.alpha_3 = 0.0  # linear
+        #self.alpha_4 = 0.0  # linear
+
         self.mu = 0.0  # zero mean noise for sampling
 
     def update(self, u_t0, u_t1, x_t0):

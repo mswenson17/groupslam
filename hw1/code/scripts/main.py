@@ -79,6 +79,8 @@ def init_particles_freespace(num_particles, occupancy_map):
 
         y = np.random.uniform(0, 8000)
         x = np.random.uniform(0, 8000)
+        #y = np.random.uniform(4000, 8000)
+        #x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(-3.14, 3.14)
 
         result = occupancy_map[int(y / 10), int(x / 10)]
@@ -157,7 +159,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 50
+    num_particles = 1500
     vis_flag = 1
 
     if vis_flag:
@@ -177,8 +179,8 @@ def main():
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    # X_bar = init_particles_freespace(num_particles, occupancy_map)
-    X_bar = init_particles_random(num_particles)
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
+    # X_bar = init_particles_random(num_particles)
 
     pool = Pool(8, pool_init)
 
@@ -218,11 +220,12 @@ def main():
         # """
         # RESAMPLING
         # # """
-        # X_bar = resampler.low_variance_sampler(X_bar)
+        X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag and time_stamp - last_time_stamp > 1:
-            visualize_timestep(X_bar, time_idx)
-            last_time_stamp = time_stamp
+        #if vis_flag and time_stamp - last_time_stamp > 1:
+        #    visualize_timestep(X_bar, time_idx)
+         #   last_time_stamp = time_stamp
+        visualize_timestep(X_bar, time_idx)
 
 
 if __name__ == "__main__":
