@@ -17,17 +17,17 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 200.
+        self.norm_std = 100.  #300
         self.max_range = 8183.  # Zmax = 8333
-        self.lambdaH = 0.01
+        self.lambdaH = .005  #1/10.
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
         self.map = map_reader
 
-        self.probShort = 0.00
-        self.probMax = 0.11
-        self.probRand = 0.11
+        self.probShort = 0.195
+        self.probMax = 0.005
+        self.probRand = 0.5
         self.probHit = 1. - (self.probShort + self.probMax + self.probRand)
 
     def beam_range_finder_model(self, z_t1_arr, x_t1):
@@ -38,7 +38,7 @@ class SensorModel:
         """
 
         z_real = list()
-        for i in range(0, 181, 20):  # take every 10th measurement
+        for i in range(0, 181, 20):  # take every 10th measurement 20
             real_loc = self.map.raytrace(x_t1, i)  # * np.pi / 360
             # print(real_loc)
             dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
@@ -54,22 +54,24 @@ class SensorModel:
 
             up = math.sqrt(2. / math.pi) * math.exp(-1. / 2. * self.x2 * self.x2)
             down = self.norm_std * (math.erf(z_r / self.div1) + math.erf(self.x1 / self.div1))
+            
+            unexpected = self.lambdaH*math.exp(-self.lambdaH * z_t) / (1. - math.exp(-z_r * self.lambdaH))
+            if z_t >= z_r: unexpected=0
 
-            unexpected = math.exp(-self.lambdaH * min(z_t, z_r)) / (1. - math.exp(-z_r * self.lambdaH))
-
-            if z_r >= self.max_range:
+            if z_t >= self.max_range:
                 self.flag = 1.
             else:
                 self.flag = 0.
-            # Probabilities
+                
+            # Probabilities 
             q += (up / down) * self.probHit
-            q += unexpected * self.probShort
+            q += unexpected* self.probShort
             q += self.flag * self.probMax
             q += self.probRand / self.max_range
 
             # From Density to Probability
-            lnp = lnp + math.log1p(q)
-        return math.exp(lnp)
+            lnp = lnp + math.log(q)
+        return lnp #math.exp(lnp)
 
 
 if __name__ == '__main__':
