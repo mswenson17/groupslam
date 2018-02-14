@@ -72,7 +72,7 @@ def init_particles_freespace(num_particles, occupancy_map):
     # initialize [x, y, theta] positions in world_frame for all particles
     # (in free space areas of the map)
 
-    freeSpaceThreshold = 0.1
+    freeSpaceThreshold = .1
     X_bar_init = np.empty([0, 4])
 
     while len(X_bar_init) < num_particles:
@@ -82,6 +82,10 @@ def init_particles_freespace(num_particles, occupancy_map):
         # y = np.random.uniform(4000, 8000)
         # x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(-3.14, 3.14)
+
+        #x=4000
+        #y=4000
+        #theta =260/360*math.pi*2
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
@@ -157,7 +161,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 3
+    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
@@ -215,13 +219,14 @@ def main():
         results = pool.map(p_up, X_bar)
         X_bar_new = np.squeeze(results)
 
-        X_bar = X_bar_new
-        u_t0 = u_t1
-
         # """
         # RESAMPLING
         # # """
-        # X_bar = resampler.low_variance_sampler(X_bar)
+        #if np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1):
+        X_bar_new = resampler.low_variance_sampler(X_bar_new)
+
+        X_bar = X_bar_new
+        u_t0 = u_t1
 
         if vis_flag and time_stamp - last_time_stamp > 1:
             visualize_timestep(X_bar, plot_index)
