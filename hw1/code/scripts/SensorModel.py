@@ -19,17 +19,17 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 300.
+        self.norm_std = 200.
         self.max_range = 8183.  # Zmax = 8333
-        self.lambdaH = 0.001
+        self.lambdaH = 0.01
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
         self.map = map_reader
 
-        probShort = 0.00
-        probMax = 0.11
-        probRand = 0.11
+        probShort = 0.05
+        probMax = 0.05
+        probRand = 0.05
         probHit = 1. - (probShort + probMax + probRand)
 
         # relative weights of each distribution in final pseudodistribution
@@ -50,7 +50,7 @@ class SensorModel:
             z_real.append(dist)
 
         q = 0
-        p = 1
+        lnp = 0
         for z_r, z_t in zip(z_real, z_t1_arr):
             # define array of probability distributions to combine and sample from
             # prob = (1, 1, 1, 1)
@@ -70,11 +70,6 @@ class SensorModel:
             else:
                 self.flag = 0.
 
-            if(z_r >= self.max_range - self.deltaRes / 2) and (z_r <= self.max_range + self.deltaRes / 2):
-                self.flag = 1.
-            else:
-                self.flag = 0.
-
             # Probabilities
             prob.append(up / down)
             prob.append(unexpected)
@@ -86,8 +81,8 @@ class SensorModel:
             #print(down)
                 
             #From Density to Probability
-            p=p*q
-        return p
+            lnp = lnp + math.log1p(q)
+        return math.exp(lnp)
 
 
 if __name__ == '__main__':
