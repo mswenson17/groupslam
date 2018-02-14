@@ -15,15 +15,10 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.00001  # rotation
-        self.alpha_2 = 0.00001  # rotation
-        self.alpha_3 = 0.5  # linear
-        self.alpha_4 = 0.5  # linear
-
-        #self.alpha_1 = 0.0  # rotation
-        #self.alpha_2 = 0.0  # rotation
-        #self.alpha_3 = 0.0  # linear
-        #self.alpha_4 = 0.0  # linear
+        self.alpha_1 = 0.00000001  # rotation
+        self.alpha_2 = 0.00000001  # rotation
+        self.alpha_3 = 0.000005  # linear
+        self.alpha_4 = 0.000005  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 
@@ -53,17 +48,19 @@ class MotionModel:
             sigma_delta_trans = 0.001
             # print(delta_trans)
         _delta_trans = delta_trans - np.random.normal(self.mu, sigma_delta_trans)
-        # print((_delta_trans - delta_trans, _delta_rot1 - delta_rot1))
         sigma_delta_rot2 = math.sqrt(self.alpha_1 * abs(delta_rot2) + self.alpha_2 * abs(delta_trans))
         _delta_rot2 = delta_rot2 - np.random.normal(self.mu, sigma_delta_rot2)
+
+        # print("delta trans: " + str(_delta_trans - delta_trans) + "delta rot: " + str(_delta_rot1 - delta_rot1))
 
         # assign to updated odometry
         x = x_t0[0] + _delta_trans * math.cos(x_t0[2] + _delta_rot1)  # rad
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
         theta = x_t0[2] + _delta_rot1 + _delta_rot2
 
-        # y = x_t0[1] + u_t1[1] - u_t0[1]
-        # x = x_t0[0] + u_t0[0] - u_t1[0]
+        theta = x_t0[2] + u_t1[2] - u_t0[2]
+        y = x_t0[1] + u_t1[1] - u_t0[1]
+        x = x_t0[0] + u_t0[0] - u_t1[0]
 
         x_t1 = [x, y, theta]
 

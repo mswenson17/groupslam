@@ -17,7 +17,7 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 200.
+        self.norm_std = 100.
         self.max_range = 8183.  # Zmax = 8333
         self.lambdaH = 0.01
 

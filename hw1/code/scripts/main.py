@@ -113,7 +113,7 @@ def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
         x_t1 = x_t0
 
     """ SENSOR MODEL """
-    if (meas_type == "L"):
+    if (meas_type == "L" and False):
         # x_t0 = X_bar[m, 0:3]
         x_t1 = motion_model.update(u_t0, u_t1, x_t0)
         odometry_laser = get_laser_odom(x_t1)
@@ -222,9 +222,9 @@ def main():
         # """
         # RESAMPLING
         # # """
-        X_bar = resampler.low_variance_sampler(X_bar)
+        # X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag and time_stamp - last_time_stamp > .5:
+        if vis_flag and time_stamp - last_time_stamp > .0:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
             plot_index += 1
