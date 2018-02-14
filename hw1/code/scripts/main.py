@@ -1,6 +1,6 @@
 import numpy as np
-import sys
-import pdb
+# import sys
+# import pdb
 import math
 
 from MapReader import MapReader
@@ -9,15 +9,15 @@ from SensorModel import SensorModel
 from Resampling import Resampling
 
 from matplotlib import pyplot as plt
-from matplotlib import figure as fig
-import time
+# from matplotlib import figure as fig
 from functools import partial
 from multiprocessing import Pool
 
 
 def visualize_map(occupancy_map):
     # plt.switch_backend('TkAgg')
-    mng = plt.get_current_fig_manager()  # mng.resize(*mng.window.maxsize())
+    # mng = plt.get_current_fig_manager()
+    # mng.resize(*mng.window.maxsize())
     plt.ion()
     # plt.imshow(np.transpose(occupancy_map), cmap='Greys')
     plt.imshow(occupancy_map, cmap='Greys')
@@ -80,8 +80,8 @@ def init_particles_freespace(num_particles, occupancy_map):
 
         y = np.random.uniform(0, 8000)
         x = np.random.uniform(0, 8000)
-        #y = np.random.uniform(4000, 8000)
-        #x = np.random.uniform(4000, 8000)
+        # y = np.random.uniform(4000, 8000)
+        # x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(-3.14, 3.14)
 
         result = occupancy_map[int(y / 10), int(x / 10)]
@@ -113,7 +113,7 @@ def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
         x_t1 = x_t0
 
     """ SENSOR MODEL """
-    if (meas_type == "L" and False):
+    if (meas_type == "L"):
         # x_t0 = X_bar[m, 0:3]
         x_t1 = motion_model.update(u_t0, u_t1, x_t0)
         odometry_laser = get_laser_odom(x_t1)
@@ -224,7 +224,7 @@ def main():
         # # """
         X_bar = resampler.low_variance_sampler(X_bar)
 
-        if vis_flag:  # and time_stamp - last_time_stamp > .5 and time_stamp < 50:
+        if vis_flag and time_stamp - last_time_stamp > .5:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
             plot_index += 1
