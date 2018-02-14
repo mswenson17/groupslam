@@ -1,15 +1,13 @@
 import numpy as np
 import math
-import time
-from matplotlib import pyplot as plt
-import scipy.stats as stats
-import pdb
+# from matplotlib import pyplot as plt
+# import scipy.stats as stats
+# import pdb
 
-from MapReader import MapReader
+# from MapReader import MapReader
 
 
 class SensorModel:
-
     """
     References: Thrun, Sebastian, Wolfram Burgard, and Dieter Fox. Probabilistic robotics. MIT press, 2005.
     [Chapter 6.3]
@@ -27,13 +25,10 @@ class SensorModel:
         self.div1 = self.norm_std * self.sqrt2
         self.map = map_reader
 
-        probShort = 0.00
-        probMax = 0.11
-        probRand = 0.11
-        probHit = 1. - (probShort + probMax + probRand)
-
-        # relative weights of each distribution in final pseudodistribution
-        self.scale = (probHit, probShort, probMax, probRand)
+        self.probShort = 0.00
+        self.probMax = 0.11
+        self.probRand = 0.11
+        self.probHit = 1. - (self.probShort + self.probMax + self.probRand)
 
     def beam_range_finder_model(self, z_t1_arr, x_t1):
         """
@@ -52,11 +47,8 @@ class SensorModel:
         q = 0
         p = 1
         for z_r, z_t in zip(z_real, z_t1_arr):
-            # define array of probability distributions to combine and sample from
-            # prob = (1, 1, 1, 1)
-            prob = list()
 
-            # Auxiliar local variables
+            # Auxiliary local variables
             self.x1 = -z_r + self.max_range
             self.x2 = (z_t - z_r) / self.norm_std
 
@@ -74,19 +66,14 @@ class SensorModel:
                 self.flag = 1.
             else:
                 self.flag = 0.
-
             # Probabilities
-            prob.append(up / down)
-            prob.append(unexpected)
-            prob.append(self.flag)
-            prob.append(1. / self.max_range)
+            q += (up / down) * self.probHit
+            q += unexpected * self.probShort
+            q += self.flag * self.probMax
+            q += self.probRand / self.max_range
 
-            for p, s in zip(prob, self.scale):
-                q += p*s  # might need to use log sum here...
-            #print(down)
-                
-            #From Density to Probability
-            p=p*q
+            # From Density to Probability
+            p = p * q
         return p
 
 
