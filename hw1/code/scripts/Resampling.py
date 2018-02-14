@@ -39,7 +39,7 @@ class Resampling:
         i = 0
 
         for m in range(0, M):
-            u = r + (m-1)*1/float(M)
+            u = r + m/float(M)
 
             while u > c:
                 i = i + 1
