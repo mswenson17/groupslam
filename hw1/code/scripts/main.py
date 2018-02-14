@@ -81,11 +81,11 @@ def init_particles_freespace(num_particles, occupancy_map):
         x = np.random.uniform(0, 8000)
         # y = np.random.uniform(4000, 8000)
         # x = np.random.uniform(4000, 8000)
-        theta = np.random.uniform(-3.14, 3.14)
+        theta = np.random.uniform(0, 2 * np.pi)
 
-        #x=4000
-        #y=4000
-        #theta =260/360*math.pi*2
+        # x=4000
+        # y=4000
+        # theta =260/360*math.pi*2
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
@@ -161,7 +161,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 500
+    num_particles = 1000
     vis_flag = 1
 
     if vis_flag:
@@ -206,8 +206,8 @@ def main():
             # odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
             # if num_particles < 5:
-                # for x in X_bar:
-                    # visualize_lasers(x, ranges, time_idx, map_obj)
+            # for x in X_bar:
+            # visualize_lasers(x, ranges, time_idx, map_obj)
 
         if (first_time_idx):
             u_t0 = u_t1
@@ -222,7 +222,7 @@ def main():
         # """
         # RESAMPLING
         # # """
-        #if np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1):
+        # if np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1):
         X_bar_new = resampler.low_variance_sampler(X_bar_new)
 
         X_bar = X_bar_new

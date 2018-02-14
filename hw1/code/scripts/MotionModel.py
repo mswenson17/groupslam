@@ -15,8 +15,8 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.0001  # rotation
-        self.alpha_2 = 0.0001  # rotation
+        self.alpha_1 = 0.001  # rotation
+        self.alpha_2 = 0.001  # rotation
         self.alpha_3 = .05  # linear
         self.alpha_4 = .05  # linear
 
@@ -46,19 +46,19 @@ class MotionModel:
             sigma_delta_trans = math.sqrt(self.alpha_3 * abs(delta_trans) + self.alpha_4 * abs(delta_rot1 + delta_rot2))
             # print(sigma_delta_trans)
         else:
-            sigma_delta_rot1 = 0.00
-            sigma_delta_rot2 = 0.00
-            sigma_delta_trans = 0.00
+            sigma_delta_rot1 = 0.00000000001
+            sigma_delta_rot2 = 0.00000000001
+            sigma_delta_trans = 0.00000000001
             # print(delta_trans)
-            
+
         _delta_trans = delta_trans + np.random.normal(self.mu, sigma_delta_trans)
-        _delta_rot1 = delta_rot1 + np.random.normal(self.mu, sigma_delta_rot1)        
+        _delta_rot1 = delta_rot1 + np.random.normal(self.mu, sigma_delta_rot1)
         _delta_rot2 = delta_rot2 + np.random.normal(self.mu, sigma_delta_rot2)
 
         # assign to updated odometry
         x = x_t0[0] + _delta_trans * math.cos(x_t0[2] + _delta_rot1)  # rad
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
-        #theta = x_t0[2] + _delta_rot1 + _delta_rot2
+        # theta = x_t0[2] + _delta_rot1 + _delta_rot2
         theta = x_t0[2] - _delta_rot1 - _delta_rot2
 
         # NOISELESS
@@ -67,9 +67,9 @@ class MotionModel:
         # y = x_t0[1] + delta_trans * math.sin(x_t0[2] + delta_rot1)
         # theta = x_t0[2] + delta_rot1 + delta_rot2
 
-        x = max(0, min(x, 7900))
-        y = max(0, min(y, 7900))
-        print((x,y,theta))
+        x = max(0, min(x, 7990))
+        y = max(0, min(y, 7990))
+        # print((x, y, theta))
 
         x_t1 = [x, y, theta]
         # x_t1[x_t1 < 0] = 0
