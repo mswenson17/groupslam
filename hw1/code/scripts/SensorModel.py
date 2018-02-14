@@ -20,7 +20,7 @@ class SensorModel:
         self.norm_std = 100.
         self.max_range = 8183.  # Zmax = 8333
         self.lambdaH = 100
-        self.lambdaH = .005  #1/10.
+        self.lambdaH = .005  # 1/10.
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
@@ -30,8 +30,8 @@ class SensorModel:
         self.probShort = 0.195
         self.probMax = 0.005
         self.probRand = 0.5
-        self.probOutside = .00
-        self.probHit = 1. - (self.probShort + self.probMax + self.probRand)
+        self.probOutside = .000
+        self.probHit = 1
 
         probsum = (self.probHit + self.probShort + self.probMax + self.probRand + self.probOutside)
 
@@ -52,7 +52,7 @@ class SensorModel:
         """
         z_real = list()
         for i in range(0, 181, 20):  # take every 10th measurement 20
-            real_loc = self.map.raytrace(x_t1, i)  # * np.pi / 360
+            real_loc = self.map_reader.raytrace(x_t1, i)  # * np.pi / 360
             # print(real_loc)
             dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
             z_real.append(dist)
@@ -67,9 +67,10 @@ class SensorModel:
 
             up = math.sqrt(2. / math.pi) * math.exp(-1. / 2. * self.x2 * self.x2)
             down = self.norm_std * (math.erf(z_r / self.div1) + math.erf(self.x1 / self.div1))
-            
-            unexpected = self.lambdaH*math.exp(-self.lambdaH * z_t) / (1. - math.exp(-z_r * self.lambdaH))
-            if z_t >= z_r: unexpected=0
+
+            unexpected = self.lambdaH * math.exp(-self.lambdaH * z_t) / (1. - math.exp(-z_r * self.lambdaH))
+            if z_t >= z_r:
+                unexpected = 0
 
             if z_t >= self.max_range:
                 self.flag = 1.
@@ -78,16 +79,16 @@ class SensorModel:
             out_of_map = 1 - self.map[int(x_t1[1]), int(x_t1[0])]
             # print(" hit: " + str(up / down) + " unexpected: " + str(unexpected) + " outside: " + str(out_of_map))
 
-            # Probabilities 
+            # Probabilities
             q += (up / down) * self.probHit
-            q += unexpected* self.probShort
+            q += unexpected * self.probShort
             q += self.flag * self.probMax
             q += self.probRand / self.max_range
             q += out_of_map * self.probOutside
 
             # From Density to Probability
             lnp = lnp + math.log(q)
-        return lnp #math.exp(lnp)
+        return lnp  # math.exp(lnp)
 
 
 if __name__ == '__main__':

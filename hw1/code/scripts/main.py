@@ -8,7 +8,7 @@ from MotionModel import MotionModel
 from SensorModel import SensorModel
 from Resampling import Resampling
 from matplotlib import pyplot as plt
-from matplotlib import figure as fig
+# from matplotlib import figure as fig
 from functools import partial
 from multiprocessing import Pool
 
@@ -55,7 +55,7 @@ def init_particles_random(num_particles):
     # (randomly across the map)
     x0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
     y0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
-    theta0_vals = np.random.uniform(4.69, 4.7, (num_particles, 1))
+    theta0_vals = np.random.uniform(3.14, 3.6, (num_particles, 1))
     # initialize weights for all particles
     w0_vals = np.ones((num_particles, 1), dtype=np.float64)
     w0_vals = w0_vals / num_particles

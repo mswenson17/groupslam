@@ -15,10 +15,10 @@ class MotionModel:
         """
         TODO : Initialize Motion Model parameters here
         """
-        self.alpha_1 = 0.00001  # rotation
-        self.alpha_2 = 0.00001  # rotation
-        self.alpha_3 = 0.5  # linear
-        self.alpha_4 = 0.5  # linear
+        self.alpha_1 = 0.000001  # rotation
+        self.alpha_2 = 0.000001  # rotation
+        self.alpha_3 = .005  # linear
+        self.alpha_4 = .005  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 
@@ -58,11 +58,19 @@ class MotionModel:
         y = x_t0[1] + _delta_trans * math.sin(x_t0[2] + _delta_rot1)
         theta = x_t0[2] + _delta_rot1 + _delta_rot2
 
-        theta = x_t0[2] + u_t1[2] - u_t0[2]
-        y = x_t0[1] + u_t1[1] - u_t0[1]
-        x = x_t0[0] + u_t0[0] - u_t1[0]
+        # NOISELESS
+        # theta = x_t0[2] + u_t1[2] - u_t0[2]
+        # x = x_t0[0] + delta_trans * math.cos(x_t0[2] + delta_rot1)  # rad
+        # y = x_t0[1] + delta_trans * math.sin(x_t0[2] + delta_rot1)
+        # theta = x_t0[2] + delta_rot1 + delta_rot2
+
+        x = max(0, min(x, 7900))
+        y = max(0, min(y, 7900))
+        # print((x,y,theta))
 
         x_t1 = [x, y, theta]
+        # x_t1[x_t1 < 0] = 0
+        # x_t1[x_t1 > 799] = 799
         # print(x_t1- x_t0)
 
         return x_t1
