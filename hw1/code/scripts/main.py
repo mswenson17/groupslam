@@ -8,7 +8,7 @@ from MotionModel import MotionModel
 from SensorModel import SensorModel
 from Resampling import Resampling
 from matplotlib import pyplot as plt
-# from matplotlib import figure as fig
+from matplotlib import figure as fig
 from functools import partial
 from multiprocessing import Pool
 
@@ -42,8 +42,10 @@ def visualize_lasers(pos, z_t, time_idx, fig):
     lines = []
     for i in range(0, len(z_t), 10):  # show every 10th measurement
         beamAngle = i * math.pi / 180 + (theta - math.pi / 2)  # radians
+
         x_laser = math.cos(beamAngle) * (z_t[i] / 10.0) + x_locs
         y_laser = math.sin(beamAngle) * (z_t[i] / 10.0) + y_locs
+
         lines.append(ax.plot([x_locs, x_laser], [y_locs, y_laser], 'b'))
 
 
@@ -51,10 +53,9 @@ def init_particles_random(num_particles):
 
     # initialize [x, y, theta] positions in world_frame for all particles
     # (randomly across the map)
-    y0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
     x0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
+    y0_vals = np.random.uniform(4000, 4001, (num_particles, 1))
     theta0_vals = np.random.uniform(4.69, 4.7, (num_particles, 1))
-
     # initialize weights for all particles
     w0_vals = np.ones((num_particles, 1), dtype=np.float64)
     w0_vals = w0_vals / num_particles
@@ -122,9 +123,6 @@ def particle_update(meas_type, u_t0, u_t1, ranges, time_idx, particle):
         # w_t = 1/num_particles
         particle_update = np.hstack((x_t1, w_t))
 
-        # if vis_flag and num_particles == 1:
-        # visualize_lasers(x_t1, z_t, time_idx, fig)
-
     else:
         particle_update = np.hstack((x_t1, particle[3]))
 
@@ -149,6 +147,8 @@ def main():
     """
     Initialize Parameters
     """
+    num_particles = 2000
+
     src_path_map = '../data/map/wean.dat'
 
     map_obj = MapReader(src_path_map)
@@ -159,7 +159,6 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
@@ -173,14 +172,13 @@ def main():
     x_t1 : particle state belief [x, y, theta] at time t [world_frame]
     X_bar : [num_particles x 4] sized array containing [x, y, theta, wt] values for all particles
     z_t : array of 180 range measurements for each laser scan
-    """
-    # pf = ParticleFilter()
+    """  # pf = ParticleFilter()
 
     """
     Monte Carlo Localization Algorithm : Main Loop
     """
-    X_bar = init_particles_freespace(num_particles, occupancy_map)
     # X_bar = init_particles_random(num_particles)
+    X_bar = init_particles_freespace(num_particles, occupancy_map)
 
     pool = Pool(8, pool_init)
 
@@ -204,6 +202,9 @@ def main():
         if (meas_type == "L"):
             # odometry_laser = meas_vals[3:6]  # [x, y, theta] coordinates of laser in odometry frame
             ranges = meas_vals[6:-1]  # 180 range measurement values from single laser scan
+            # if num_particles < 5:
+                # for x in X_bar:
+                    # visualize_lasers(x, ranges, time_idx, map_obj)
 
         if (first_time_idx):
             u_t0 = u_t1

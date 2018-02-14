@@ -17,18 +17,31 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 200.
+        self.norm_std = 100.
         self.max_range = 8183.  # Zmax = 8333
-        self.lambdaH = 0.01
+        self.lambdaH = 100
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
-        self.map = map_reader
+        self.map_reader = map_reader
+        self.map = map_reader.get_map()
 
-        self.probShort = 0.00
-        self.probMax = 0.11
-        self.probRand = 0.11
-        self.probHit = 1. - (self.probShort + self.probMax + self.probRand)
+        self.probShort = 0.0195
+        self.probMax = 0.005
+        self.probRand = 1
+        self.probOutside = .00
+        self.probHit = 1
+
+        probsum = (self.probHit + self.probShort + self.probMax + self.probRand + self.probOutside)
+
+        self.probShort /= probsum
+        self.probMax /= probsum
+        self.probRand /= probsum
+        self.probOutside /= probsum
+        self.probHit /= probsum
+
+        print(self.probHit + self.probShort + self.probMax + self.probRand + self.probOutside)
+        # self.probHit = 1. - (self.probShort + self.probMax + self.probRand + self.probOutside)
 
     def beam_range_finder_model(self, z_t1_arr, x_t1):
         """
@@ -36,12 +49,10 @@ class SensorModel:
         param[in] x_t1 : particle state belief [x, y, theta] at time t [world_frame]
         param[out] prob_zt1 : likelihood of a range scan zt1 at time t
         """
-
         z_real = list()
         for i in range(0, 181, 20):  # take every 10th measurement
-            real_loc = self.map.raytrace(x_t1, i)  # * np.pi / 360
-            # print(real_loc)
-            dist = np.sqrt(np.square(real_loc[0] - x_t1[0]) + np.square(real_loc[1] - x_t1[1]))
+            real_intersection = self.map_reader.raytrace(x_t1, i)  # * np.pi / 360
+            dist = np.sqrt(np.square(real_intersection[0] - x_t1[0]) + np.square(real_intersection[1] - x_t1[1]))
             z_real.append(dist)
 
         q = 0
@@ -55,17 +66,23 @@ class SensorModel:
             up = math.sqrt(2. / math.pi) * math.exp(-1. / 2. * self.x2 * self.x2)
             down = self.norm_std * (math.erf(z_r / self.div1) + math.erf(self.x1 / self.div1))
 
-            unexpected = math.exp(-self.lambdaH * min(z_t, z_r)) / (1. - math.exp(-z_r * self.lambdaH))
+            unexpected = self.lambdaH * math.exp(-self.lambdaH * min(z_t, z_r)) / (1. - math.exp(-z_r * self.lambdaH))
 
             if z_r >= self.max_range:
                 self.flag = 1.
             else:
                 self.flag = 0.
+
+            out_of_map = 1 - self.map[int(x_t1[1]), int(x_t1[0])]
+
+            # print(" hit: " + str(up / down) + " unexpected: " + str(unexpected) + " outside: " + str(out_of_map))
+
             # Probabilities
             q += (up / down) * self.probHit
             q += unexpected * self.probShort
             q += self.flag * self.probMax
             q += self.probRand / self.max_range
+            q += out_of_map * self.probOutside
 
             # From Density to Probability
             lnp = lnp + math.log1p(q)
