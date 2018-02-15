@@ -27,7 +27,7 @@ def visualize_timestep(X_bar, tstep):
     x_locs = X_bar[:, 1] / 10.0
     y_locs = X_bar[:, 0] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
-    plt.savefig("../../../../log/" + '{:03d}'.format(tstep) + ".png")
+    #plt.savefig("../../../../log/" + '{:03d}'.format(tstep) + ".png")
     plt.pause(0.00001)
     scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
 
@@ -87,6 +87,7 @@ def init_particles_freespace(num_particles, occupancy_map):
         #x=4000
         #y=4000
         #theta =260/360*math.pi*2
+        #theta = np.random.uniform(np.pi/2., 3. * np.pi/2.)
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
@@ -162,7 +163,7 @@ def main():
 
     resampler = Resampling()
 
-    num_particles = 1000
+    num_particles = 500
     vis_flag = 1
 
     if vis_flag:
@@ -224,7 +225,9 @@ def main():
         # RESAMPLING
         # # """
         # if np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1):
-        if meas_type=="L" and np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1): X_bar_new = resampler.low_variance_sampler(X_bar_new)
+        if (meas_type=="L" and np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1)): X_bar_new = resampler.low_variance_sampler(X_bar_new)
+        #if (meas_type=="L"): X_bar_new = resampler.low_variance_sampler(X_bar_new)
+        #X_bar_new = resampler.low_variance_sampler(X_bar_new)
 
         X_bar = X_bar_new
         u_t0 = u_t1

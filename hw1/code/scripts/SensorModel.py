@@ -17,21 +17,21 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 300.    #100
+        self.norm_std = 120.    #50.     100
         self.max_range = 8183.  # Zmax = 8333
         #self.lambdaH = 100
-        self.lambdaH = .0005  # .005
+        self.lambdaH = .005  #0.007    .005
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
         self.map_reader = map_reader
         self.map = map_reader.get_map()
 
-        self.probShort = 0.195 #0.195
-        self.probMax = 0.05  #0.05
-        self.probRand = 0.5  #0.5
-        self.probOutside = .001  #.000
-        self.probHit = .5 #.5 - self.probShort - self.probMax - self.probRand - self.probOutside
+        self.probShort = 0.02 #0.02    0.195
+        self.probMax = 0.01  #0.01    0.05
+        self.probRand = 0.01  #0.01   0.5
+        self.probOutside = .0  #.000
+        self.probHit = 1 - self.probShort - self.probMax - self.probRand - self.probOutside
 
         #probsum = (self.probHit + self.probShort + self.probMax + self.probRand + self.probOutside)
 
@@ -89,9 +89,9 @@ class SensorModel:
             q += out_of_map * self.probOutside
 
             # From Density to Probability
-            #lnp = lnp + math.log(q)
-            p=p*q
-        return p #math.exp(lnp)
+            lnp = lnp + math.log(q)
+            #p=p*q
+        return math.exp(lnp) #p
 
 
 if __name__ == '__main__':
