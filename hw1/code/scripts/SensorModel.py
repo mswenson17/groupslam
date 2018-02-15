@@ -28,7 +28,7 @@ class SensorModel:
         self.map = map_reader.get_map()
 
         self.probShort = 0.195 #0.195
-        self.probMax = 0.005  #0.005
+        self.probMax = 0.05  #0.05
         self.probRand = 0.5  #0.5
         self.probOutside = .000  #.000
         self.probHit = .5 #.5 - self.probShort - self.probMax - self.probRand - self.probOutside
