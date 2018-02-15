@@ -17,8 +17,8 @@ class MotionModel:
         """
         self.alpha_1 = 0.0001  # rotation
         self.alpha_2 = 0.0001  # rotation
-        self.alpha_3 = 0.05  # linear
-        self.alpha_4 = 0.05  # linear
+        self.alpha_3 = 0.001#05  # linear
+        self.alpha_4 = 0.001#05  # linear
 
         self.mu = 0.0  # zero mean noise for sampling
 
