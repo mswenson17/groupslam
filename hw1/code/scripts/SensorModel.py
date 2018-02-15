@@ -17,7 +17,7 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 120.    #50.     100
+        self.norm_std = 50.    #50.     100
         self.max_range = 8183.  # Zmax = 8333
         #self.lambdaH = 100
         self.lambdaH = .005  #0.007    .005
@@ -27,7 +27,7 @@ class SensorModel:
         self.map_reader = map_reader
         self.map = map_reader.get_map()
 
-        self.probShort = 0.02 #0.02    0.195
+        self.probShort = 0.0 #0.02    0.195
         self.probMax = 0.01  #0.01    0.05
         self.probRand = 0.01  #0.01   0.5
         self.probOutside = .0  #.000

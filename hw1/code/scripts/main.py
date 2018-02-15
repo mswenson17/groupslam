@@ -159,6 +159,7 @@ def main():
     occupancy_map = map_obj.get_map()
 
     src_path_log = '../data/log/robotdata1.log'
+    #src_path_log = '../data/log/robotdata3.log'
     logfile = open(src_path_log, 'r')
 
     resampler = Resampling()
