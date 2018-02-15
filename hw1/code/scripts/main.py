@@ -78,7 +78,7 @@ def init_particles_freespace(num_particles, occupancy_map):
     while len(X_bar_init) < num_particles:
 
         y = np.random.uniform(0, 8000)
-        x = np.random.uniform(0, 8000)
+        x = np.random.uniform(3000, 7000)
         # y = np.random.uniform(4000, 8000)
         # x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(0, 2 * np.pi)
@@ -223,7 +223,9 @@ def main():
         # RESAMPLING
         # # """
         # if np.dot(u_t0,u_t0)!=np.dot(u_t1,u_t1):
-        X_bar_new = resampler.low_variance_sampler(X_bar_new)
+        # if ~(u_t0[0:3] == u_t1[0:3]).all():
+        if (meas_type == "L"):
+            X_bar_new = resampler.low_variance_sampler(X_bar_new)
 
         X_bar = X_bar_new
         u_t0 = u_t1

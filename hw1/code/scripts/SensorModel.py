@@ -17,10 +17,10 @@ class SensorModel:
         """
         TODO : Initialize Sensor Model parameters here
         """
-        self.norm_std = 100.    #100
+        self.norm_std = 300.    #100
         self.max_range = 8183.  # Zmax = 8333
         #self.lambdaH = 100
-        self.lambdaH = .005  # .005
+        self.lambdaH = .0005  # .005
 
         self.sqrt2 = math.sqrt(2.)
         self.div1 = self.norm_std * self.sqrt2
@@ -30,7 +30,7 @@ class SensorModel:
         self.probShort = 0.195 #0.195
         self.probMax = 0.05  #0.05
         self.probRand = 0.5  #0.5
-        self.probOutside = .000  #.000
+        self.probOutside = .001  #.000
         self.probHit = .5 #.5 - self.probShort - self.probMax - self.probRand - self.probOutside
 
         #probsum = (self.probHit + self.probShort + self.probMax + self.probRand + self.probOutside)
@@ -76,7 +76,7 @@ class SensorModel:
                 self.flag = 1.
             else:
                 self.flag = 0.
-                
+
             out_of_map = 1 - self.map[int(x_t1[1]), int(x_t1[0])]
             # print(" hit: " + str(up / down) + " unexpected: " + str(unexpected) + " outside: " + str(out_of_map))
 
