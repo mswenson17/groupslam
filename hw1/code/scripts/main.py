@@ -27,6 +27,7 @@ def visualize_timestep(X_bar, tstep):
     x_locs = X_bar[:, 1] / 10.0
     y_locs = X_bar[:, 0] / 10.0
     scat = plt.scatter(x_locs, y_locs, c='r', marker='o')
+    plt.savefig("../../../../log/" + '{:03d}'.format(tstep) + ".png")
     plt.pause(0.00001)
     scat.remove()  # comment this out for a quick'n'dirty trjactory visualizer
 
@@ -230,9 +231,10 @@ def main():
         X_bar = X_bar_new
         u_t0 = u_t1
 
-        if vis_flag and time_stamp - last_time_stamp > 1:
+        if vis_flag and time_stamp - last_time_stamp > .1:
             visualize_timestep(X_bar, plot_index)
             last_time_stamp = time_stamp
+            plot_index+=1
 
 
 if __name__ == "__main__":
