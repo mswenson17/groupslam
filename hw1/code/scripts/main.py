@@ -84,9 +84,9 @@ def init_particles_freespace(num_particles, occupancy_map):
         # x = np.random.uniform(4000, 8000)
         theta = np.random.uniform(0, 2 * np.pi)
 
-        # x=4000
-        # y=4000
-        # theta =260/360*math.pi*2
+        #x=4000
+        #y=4000
+        theta =260/360*math.pi*2
 
         result = occupancy_map[int(y / 10), int(x / 10)]
         if abs(result) <= freeSpaceThreshold:  # we're good!
